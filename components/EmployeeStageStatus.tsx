@@ -10,7 +10,7 @@ export default function EmployeeStageStatus({
   return (
     <div className="flex flex-col gap-4">
       {stageProgress.map(({ stage, percent }) => (
-        <div key={stage.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <div key={stage.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-900">{stage.title}</h3>
             <span className="text-xs font-medium text-slate-500">{percent}%</span>

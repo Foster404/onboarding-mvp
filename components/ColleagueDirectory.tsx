@@ -70,7 +70,7 @@ export default function ColleagueDirectory({ colleagues }: { colleagues: Colleag
           return (
             <div
               key={c.id}
-              className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
             >
               <button
                 type="button"

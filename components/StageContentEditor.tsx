@@ -56,7 +56,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
         <input
           value={title}
@@ -164,7 +164,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                   setNewMediaUrl("");
                 })
               }
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
             >
               Add media
             </button>

@@ -35,7 +35,7 @@ export default function NewEmployeePage() {
 
   if (result) {
     return (
-      <div className="mx-auto max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="mb-2 text-lg font-semibold text-slate-900">Employee created</h1>
         <p className="mb-4 text-sm text-slate-500">
           Share these credentials with the employee. The password is shown only once.
@@ -64,7 +64,7 @@ export default function NewEmployeePage() {
         Creates their login. A temporary password is generated for you to share.
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">Full name</label>
           <input
@@ -98,7 +98,7 @@ export default function NewEmployeePage() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
         >
           {loading ? "Creating..." : "Create employee"}
         </button>

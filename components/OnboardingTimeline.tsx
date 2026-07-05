@@ -78,7 +78,7 @@ function StageCard({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-base font-semibold text-slate-900">{stage.title}</h3>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
@@ -88,7 +88,7 @@ function StageCard({
 
       <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div
-          className="h-full rounded-full bg-slate-900 transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -101,7 +101,7 @@ function StageCard({
               checked={optimistic.has(item.id)}
               disabled={pending}
               onChange={(e) => handleToggle(item.id, e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
             />
             <span
               className={`text-sm ${
@@ -143,14 +143,14 @@ export default function OnboardingTimeline({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900">Overall progress (90 days)</h2>
-          <span className="text-sm font-medium text-slate-600">{overallPercent}%</span>
+          <span className="text-sm font-semibold text-indigo-700">{overallPercent}%</span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/70">
           <div
-            className="h-full rounded-full bg-slate-900 transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all"
             style={{ width: `${overallPercent}%` }}
           />
         </div>

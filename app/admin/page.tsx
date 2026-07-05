@@ -41,14 +41,14 @@ export default async function AdminDashboardPage() {
           </Link>
           <Link
             href="/admin/employees/new"
-            className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
           >
             New employee
           </Link>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
             <tr>
@@ -84,7 +84,7 @@ export default async function AdminDashboardPage() {
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
                         <div
-                          className="h-full rounded-full bg-slate-900"
+                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
                           style={{ width: `${percent}%` }}
                         />
                       </div>

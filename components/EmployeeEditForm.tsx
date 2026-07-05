@@ -35,7 +35,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-base font-semibold text-slate-900">Profile</h2>
 
       <div className="grid grid-cols-2 gap-4">
@@ -95,7 +95,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+        className="w-fit rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save changes"}
       </button>
