@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
+import Spinner from "@/components/Spinner";
 
 export default function ProfileEditor({ profile, userId }: { profile: Profile; userId: string }) {
   const router = useRouter();
@@ -77,8 +78,9 @@ export default function ProfileEditor({ profile, userId }: { profile: Profile; u
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
+            {uploading && <Spinner className="h-3.5 w-3.5" />}
             {uploading ? "Uploading..." : "Change photo"}
           </button>
           <input
@@ -123,8 +125,9 @@ export default function ProfileEditor({ profile, userId }: { profile: Profile; u
         type="button"
         onClick={handleSave}
         disabled={saving || uploading}
-        className="w-fit rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+        className="flex w-fit items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
       >
+        {saving && <Spinner />}
         {saving ? "Saving..." : "Save changes"}
       </button>
     </div>

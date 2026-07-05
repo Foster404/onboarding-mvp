@@ -1,24 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-
-function useSpotlight() {
-  const spotlightRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handlePointerMove(e: PointerEvent) {
-      spotlightRef.current?.style.setProperty("--spotlight-x", `${e.clientX}px`);
-      spotlightRef.current?.style.setProperty("--spotlight-y", `${e.clientY}px`);
-    }
-
-    window.addEventListener("pointermove", handlePointerMove);
-    return () => window.removeEventListener("pointermove", handlePointerMove);
-  }, []);
-
-  return spotlightRef;
-}
+import Spinner from "@/components/Spinner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +12,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const spotlightRef = useSpotlight();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -49,19 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-slate-50 px-4">
-      <div className="pointer-events-none absolute -top-40 -left-32 h-96 w-96 animate-pulse rounded-full bg-indigo-300/40 blur-3xl [animation-duration:6s]" />
-      <div className="pointer-events-none absolute -right-32 top-1/3 h-96 w-96 animate-pulse rounded-full bg-violet-300/30 blur-3xl [animation-duration:8s]" />
-      <div className="pointer-events-none absolute bottom-[-8rem] left-1/3 h-80 w-80 animate-pulse rounded-full bg-sky-200/40 blur-3xl [animation-duration:7s]" />
-      <div
-        ref={spotlightRef}
-        className="pointer-events-none absolute inset-0 transition-opacity"
-        style={{
-          background:
-            "radial-gradient(600px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(99,102,241,0.15), transparent 70%)",
-        }}
-      />
-
+    <div className="relative flex min-h-screen items-center justify-center px-4">
       <div className="relative w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white/90 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white shadow-lg shadow-indigo-500/30">
@@ -127,8 +99,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-600/25 transition-all hover:shadow-lg hover:shadow-indigo-600/30 disabled:opacity-50"
+            className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-600/25 transition-all hover:shadow-lg hover:shadow-indigo-600/30 disabled:opacity-50"
           >
+            {loading && <Spinner />}
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>

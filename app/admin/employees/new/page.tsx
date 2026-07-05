@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import Spinner from "@/components/Spinner";
 
 export default function NewEmployeePage() {
   const [fullName, setFullName] = useState("");
@@ -98,8 +99,9 @@ export default function NewEmployeePage() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
         >
+          {loading && <Spinner />}
           {loading ? "Creating..." : "Create employee"}
         </button>
       </form>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateEmployeeProfile } from "@/app/actions/admin-employees";
 import type { EmployeeStatus, Profile } from "@/types/database";
+import Spinner from "@/components/Spinner";
 
 export default function EmployeeEditForm({ profile }: { profile: Profile }) {
   const [fullName, setFullName] = useState(profile.full_name);
@@ -95,8 +96,9 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="w-fit rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+        className="flex w-fit items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
       >
+        {saving && <Spinner />}
         {saving ? "Saving..." : "Save changes"}
       </button>
     </div>

@@ -12,6 +12,7 @@ import {
   updateStageTitle,
 } from "@/app/actions/admin-content";
 import type { ChecklistItem, MediaType, Stage, StageMedia } from "@/types/database";
+import Spinner from "@/components/Spinner";
 
 export type StageWithContent = Stage & { checklist_items: ChecklistItem[]; stage_media: StageMedia[] };
 
@@ -23,15 +24,15 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   const [newMediaType, setNewMediaType] = useState<MediaType>("video");
   const [newMediaUrl, setNewMediaUrl] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  async function run(fn: () => Promise<void>) {
-    setBusy(true);
+  async function run(key: string, fn: () => Promise<void>) {
+    setBusyKey(key);
     try {
       await fn();
       router.refresh();
     } finally {
-      setBusy(false);
+      setBusyKey(null);
     }
   }
 
@@ -55,6 +56,8 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
     if (!newMediaTitle) setNewMediaTitle(file.name);
   }
 
+  const busy = busyKey !== null;
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
@@ -66,9 +69,10 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
         <button
           type="button"
           disabled={busy || title === stage.title}
-          onClick={() => run(() => updateStageTitle(stage.id, title))}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          onClick={() => run("save-title", () => updateStageTitle(stage.id, title))}
+          className="flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
+          {busyKey === "save-title" && <Spinner className="h-3.5 w-3.5" />}
           Save title
         </button>
       </div>
@@ -77,7 +81,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
         <h4 className="mb-2 text-sm font-medium text-slate-700">Checklist items</h4>
         <ul className="mb-2 flex flex-col gap-2">
           {stage.checklist_items.map((item) => (
-            <ChecklistItemRow key={item.id} item={item} busy={busy} run={run} />
+            <ChecklistItemRow key={item.id} item={item} busyKey={busyKey} run={run} />
           ))}
         </ul>
         <div className="flex gap-2">
@@ -91,13 +95,14 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
             type="button"
             disabled={busy || !newItemTitle.trim()}
             onClick={() =>
-              run(async () => {
+              run("add-item", async () => {
                 await addChecklistItem(stage.id, newItemTitle.trim(), stage.checklist_items.length + 1);
                 setNewItemTitle("");
               })
             }
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
+            {busyKey === "add-item" && <Spinner className="h-3.5 w-3.5" />}
             Add
           </button>
         </div>
@@ -114,9 +119,10 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => run(() => deleteStageMedia(m.id))}
-                className="text-red-600 hover:underline disabled:opacity-50"
+                onClick={() => run(`remove-media-${m.id}`, () => deleteStageMedia(m.id))}
+                className="flex items-center gap-1.5 text-red-600 hover:underline disabled:opacity-50"
               >
+                {busyKey === `remove-media-${m.id}` && <Spinner className="h-3.5 w-3.5" />}
                 Remove
               </button>
             </li>
@@ -152,20 +158,25 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
           <div className="flex items-center justify-between gap-2">
             <label className="text-xs text-slate-500">
               <input type="file" onChange={handleUploadFile} disabled={uploading} className="text-xs" />
-              {uploading && " uploading..."}
+              {uploading && (
+                <span className="ml-1.5 inline-flex items-center gap-1 align-middle">
+                  <Spinner className="h-3 w-3" /> uploading...
+                </span>
+              )}
             </label>
             <button
               type="button"
               disabled={busy || !newMediaTitle.trim() || !newMediaUrl.trim()}
               onClick={() =>
-                run(async () => {
+                run("add-media", async () => {
                   await addStageMedia(stage.id, newMediaType, newMediaTitle.trim(), newMediaUrl.trim());
                   setNewMediaTitle("");
                   setNewMediaUrl("");
                 })
               }
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
             >
+              {busyKey === "add-media" && <Spinner className="h-3.5 w-3.5" />}
               Add media
             </button>
           </div>
@@ -177,14 +188,17 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
 
 function ChecklistItemRow({
   item,
-  busy,
+  busyKey,
   run,
 }: {
   item: ChecklistItem;
-  busy: boolean;
-  run: (fn: () => Promise<void>) => Promise<void>;
+  busyKey: string | null;
+  run: (key: string, fn: () => Promise<void>) => Promise<void>;
 }) {
   const [title, setTitle] = useState(item.title);
+  const busy = busyKey !== null;
+  const saveKey = `save-item-${item.id}`;
+  const deleteKey = `delete-item-${item.id}`;
 
   return (
     <li className="flex items-center gap-2">
@@ -196,17 +210,19 @@ function ChecklistItemRow({
       <button
         type="button"
         disabled={busy || title === item.title}
-        onClick={() => run(() => updateChecklistItem(item.id, title))}
-        className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        onClick={() => run(saveKey, () => updateChecklistItem(item.id, title))}
+        className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
       >
+        {busyKey === saveKey && <Spinner className="h-3 w-3" />}
         Save
       </button>
       <button
         type="button"
         disabled={busy}
-        onClick={() => run(() => deleteChecklistItem(item.id))}
-        className="text-xs text-red-600 hover:underline disabled:opacity-50"
+        onClick={() => run(deleteKey, () => deleteChecklistItem(item.id))}
+        className="flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
       >
+        {busyKey === deleteKey && <Spinner className="h-3 w-3" />}
         Delete
       </button>
     </li>

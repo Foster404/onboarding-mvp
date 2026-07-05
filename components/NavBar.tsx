@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { signOut } from "@/app/actions/auth";
+import SignOutButton from "@/components/SignOutButton";
 
 export default async function NavBar() {
   const current = await getCurrentUser();
@@ -48,12 +49,7 @@ export default async function NavBar() {
             <span className="hidden text-sm text-slate-600 md:inline">{profile.full_name}</span>
           </div>
           <form action={signOut}>
-            <button
-              type="submit"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
-            >
-              Sign out
-            </button>
+            <SignOutButton />
           </form>
         </div>
       </div>
