@@ -67,7 +67,7 @@ export default function LoginPage() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white shadow-lg shadow-indigo-500/30">
             O
           </div>
-          <h1 className="mb-1 text-xl font-semibold text-slate-900">Onboarding Platform</h1>
+          <h1 className="mb-1 text-xl font-semibold text-slate-900">Orbit</h1>
           <p className="text-sm text-slate-500">Sign in with the account your admin created for you.</p>
         </div>
 

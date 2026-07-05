@@ -1,4 +1,4 @@
-# Employee Onboarding Platform (MVP)
+# Orbit — Employee Onboarding Platform (MVP)
 
 A 90-day onboarding tracker: employees check off stage-by-stage checklists and
 watch stage videos/presentations, HR manages content and monitors progress

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Onboarding Platform",
-  description: "90-day employee onboarding tracker",
+  title: "Orbit",
+  description: "Orbit — 90-day employee onboarding tracker",
 };
 
 export default function RootLayout({

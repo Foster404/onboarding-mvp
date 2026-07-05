@@ -22,7 +22,7 @@ export default async function NavBar() {
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white shadow-sm shadow-indigo-500/30">
               O
             </span>
-            <span className="font-semibold text-slate-900">Onboarding</span>
+            <span className="font-semibold text-slate-900">Orbit</span>
           </Link>
           <Link href="/" className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900">
             My Onboarding
