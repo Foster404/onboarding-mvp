@@ -9,7 +9,7 @@ export default async function ColleaguesPage() {
 
   const supabase = await createClient();
   const { data: colleagues } = await supabase
-    .from("colleague_directory")
+    .rpc("colleague_directory")
     .select("*")
     .order("full_name", { ascending: true });
 

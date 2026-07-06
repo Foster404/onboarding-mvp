@@ -132,12 +132,12 @@ export type Database = {
         ];
       };
     };
-    Views: {
+    Views: Record<string, never>;
+    Functions: {
       colleague_directory: {
-        Row: ColleagueDirectoryRow;
-        Relationships: [];
+        Args: Record<PropertyKey, never>;
+        Returns: ColleagueDirectoryRow[];
       };
     };
-    Functions: Record<string, never>;
   };
 };
