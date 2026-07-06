@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Spinner from "@/components/Spinner";
+import Logo from "@/components/Logo";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -57,8 +58,8 @@ export default function ResetPasswordPage() {
     <div className="relative flex min-h-screen items-center justify-center px-4">
       <div className="relative w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white/90 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white shadow-lg shadow-indigo-500/30">
-            O
+          <div className="mb-4">
+            <Logo />
           </div>
           <h1 className="text-xl font-semibold text-slate-900">Set a new password</h1>
           <p className="text-sm text-slate-500">Choose a new password for your account.</p>

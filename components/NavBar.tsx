@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { signOut } from "@/app/actions/auth";
 import SignOutButton from "@/components/SignOutButton";
+import Logo from "@/components/Logo";
 
 export default async function NavBar() {
   const current = await getCurrentUser();
@@ -20,9 +21,7 @@ export default async function NavBar() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <nav className="flex items-center gap-1 text-sm font-medium text-slate-600">
           <Link href="/" className="mr-4 flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white shadow-sm shadow-indigo-500/30">
-              O
-            </span>
+            <Logo size="sm" />
             <span className="font-semibold text-slate-900">Orbit</span>
           </Link>
           <Link href="/" className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900">
