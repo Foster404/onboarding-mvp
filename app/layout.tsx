@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import ImmersiveBackground from "@/components/ImmersiveBackground";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         <ImmersiveBackground />
         <NavBar />
         <main className="relative mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+        <Footer />
       </body>
     </html>
   );
