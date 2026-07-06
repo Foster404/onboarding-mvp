@@ -139,7 +139,7 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
       return row.percent === 100 ? "Finished" : row.currentStageTitle;
     case "progress":
       return (
-        <div className="flex items-center justify-center gap-1.5">
+        <div className="flex items-center justify-start gap-1.5">
           <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
             <div
               className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
@@ -420,7 +420,9 @@ export default function EmployeesTable({
                 {columnOrder.map((col) => (
                   <td
                     key={col}
-                    className={`truncate px-2 py-2 text-slate-600 ${col === "name" ? "text-left" : "text-center"}`}
+                    className={`truncate px-2 py-2 text-slate-600 ${
+                      col === "name" || col === "progress" ? "text-left" : "text-center"
+                    }`}
                   >
                     {renderCell(row, col)}
                   </td>
