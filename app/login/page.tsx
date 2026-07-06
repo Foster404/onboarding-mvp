@@ -33,13 +33,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 px-4">
+      <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        Find Your{" "}
+        <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+          Orbit
+        </span>
+      </h2>
+
       <div className="relative w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white/90 p-8 shadow-xl shadow-slate-900/5 backdrop-blur-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white shadow-lg shadow-indigo-500/30">
             O
           </div>
-          <h1 className="mb-1 text-xl font-semibold text-slate-900">Orbit</h1>
+          <h1 className="mb-1 text-xl font-semibold text-slate-900">
+            Orbit <span className="font-normal text-slate-500">— Onboard With Convenience</span>
+          </h1>
           <p className="text-sm text-slate-500">Sign in with the account your admin created for you.</p>
         </div>
 
