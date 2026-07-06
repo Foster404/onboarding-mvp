@@ -17,6 +17,7 @@ export default function EmployeeStageStatus({
   const [pending, startTransition] = useTransition();
   const [finishing, setFinishing] = useState(false);
   const [optimistic, setOptimistic] = useState<Set<string>>(completedIds);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const allItemIds = useMemo(
     () => stageProgress.flatMap(({ stage }) => stage.checklist_items.map((i) => i.id)),
@@ -38,6 +39,7 @@ export default function EmployeeStageStatus({
   }
 
   function handleFinishOnboarding() {
+    setShowConfirm(false);
     setOptimistic(new Set(allItemIds));
     setFinishing(true);
     startTransition(async () => {
@@ -55,7 +57,7 @@ export default function EmployeeStageStatus({
         <h2 className="text-base font-semibold text-slate-900">Checklist status</h2>
         <button
           type="button"
-          onClick={handleFinishOnboarding}
+          onClick={() => setShowConfirm(true)}
           disabled={pending || allCompleted}
           className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50"
         >
@@ -63,6 +65,33 @@ export default function EmployeeStageStatus({
           {allCompleted ? "Onboarding complete" : finishing ? "Finishing..." : "Finish onboarding"}
         </button>
       </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
+            <h3 className="text-base font-semibold text-slate-900">Finish onboarding?</h3>
+            <p className="mt-1.5 text-sm text-slate-500">
+              This marks every checklist item as complete for this employee. This can&apos;t be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleFinishOnboarding}
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700"
+              >
+                Finish onboarding
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {stageProgress.map(({ stage }) => {
         const total = stage.checklist_items.length;
