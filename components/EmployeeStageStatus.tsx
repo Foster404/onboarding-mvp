@@ -71,7 +71,8 @@ export default function EmployeeStageStatus({
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
             <h3 className="text-base font-semibold text-slate-900">Finish onboarding?</h3>
             <p className="mt-1.5 text-sm text-slate-500">
-              This marks every checklist item as complete for this employee. This can&apos;t be undone.
+              This marks every checklist item as complete for this employee. It can only be undone
+              manually, by unchecking each item again.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button

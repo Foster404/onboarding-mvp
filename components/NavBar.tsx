@@ -35,7 +35,7 @@ export default async function NavBar() {
         <nav className="flex items-center gap-1 text-sm font-medium text-slate-600">
           <span className="mr-4 flex items-center gap-2">
             <Logo size="sm" />
-            <span className="font-semibold text-slate-900">Orbit</span>
+            <span className="text-base font-semibold text-slate-900">Orbit</span>
           </span>
           {navLinks.map((link) => (
             <Link
@@ -53,7 +53,14 @@ export default async function NavBar() {
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
               {initials}
             </span>
-            <span className="hidden text-sm text-slate-600 md:inline">{profile.full_name}</span>
+            <span className="hidden items-center gap-1.5 text-sm text-slate-600 md:flex">
+              {profile.full_name}
+              {isAdmin && (
+                <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+                  Admin
+                </span>
+              )}
+            </span>
           </div>
           <form action={signOut}>
             <SignOutButton />
