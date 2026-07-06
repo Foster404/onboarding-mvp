@@ -47,14 +47,11 @@ export default async function EmployeeDetailPage({
 
       <EmployeeEditForm profile={profile} />
 
-      <div>
-        <h2 className="mb-3 text-base font-semibold text-slate-900">Checklist status</h2>
-        <EmployeeStageStatus
-          profileId={profile.id}
-          stageProgress={stageProgress}
-          completedIds={completedIds}
-        />
-      </div>
+      <EmployeeStageStatus
+        profileId={profile.id}
+        stageProgress={stageProgress}
+        completedIds={completedIds}
+      />
     </div>
   );
 }

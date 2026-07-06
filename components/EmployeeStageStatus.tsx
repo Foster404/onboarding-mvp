@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { toggleEmployeeChecklistItem } from "@/app/actions/progress";
+import { useMemo, useState, useTransition } from "react";
+import { toggleEmployeeChecklistItem, finishEmployeeOnboarding } from "@/app/actions/progress";
 import type { StageProgress } from "@/lib/onboarding-progress";
+import Spinner from "@/components/Spinner";
 
 export default function EmployeeStageStatus({
   profileId,
@@ -14,7 +15,14 @@ export default function EmployeeStageStatus({
   completedIds: Set<string>;
 }) {
   const [pending, startTransition] = useTransition();
+  const [finishing, setFinishing] = useState(false);
   const [optimistic, setOptimistic] = useState<Set<string>>(completedIds);
+
+  const allItemIds = useMemo(
+    () => stageProgress.flatMap(({ stage }) => stage.checklist_items.map((i) => i.id)),
+    [stageProgress]
+  );
+  const allCompleted = allItemIds.length > 0 && allItemIds.every((id) => optimistic.has(id));
 
   function handleToggle(itemId: string, checked: boolean) {
     setOptimistic((prev) => {
@@ -29,8 +37,33 @@ export default function EmployeeStageStatus({
     });
   }
 
+  function handleFinishOnboarding() {
+    setOptimistic(new Set(allItemIds));
+    setFinishing(true);
+    startTransition(async () => {
+      try {
+        await finishEmployeeOnboarding(profileId, allItemIds);
+      } finally {
+        setFinishing(false);
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold text-slate-900">Checklist status</h2>
+        <button
+          type="button"
+          onClick={handleFinishOnboarding}
+          disabled={pending || allCompleted}
+          className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {finishing && <Spinner />}
+          {allCompleted ? "Onboarding complete" : finishing ? "Finishing..." : "Finish onboarding"}
+        </button>
+      </div>
+
       {stageProgress.map(({ stage }) => {
         const total = stage.checklist_items.length;
         const completed = stage.checklist_items.filter((i) => optimistic.has(i.id)).length;
