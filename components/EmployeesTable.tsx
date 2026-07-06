@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { EmployeeStatus } from "@/types/database";
 
@@ -91,8 +91,8 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
       return row.currentStageTitle;
     case "progress":
       return (
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+        <div className="flex items-center gap-1.5">
+          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
             <div
               className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
               style={{ width: `${row.percent}%` }}
@@ -111,6 +111,8 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | EmployeeStatus>("all");
+  const [dragOverColumn, setDragOverColumn] = useState<ColumnId | null>(null);
+  const draggedColumn = useRef<ColumnId | null>(null);
 
   const departments = useMemo(
     () =>
@@ -148,31 +150,33 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
     }
   }
 
-  function moveColumn(col: ColumnId, direction: -1 | 1) {
+  function handleDrop(targetCol: ColumnId) {
+    const source = draggedColumn.current;
+    draggedColumn.current = null;
+    setDragOverColumn(null);
+    if (!source || source === targetCol) return;
+
     setColumnOrder((prev) => {
-      const idx = prev.indexOf(col);
-      const newIdx = idx + direction;
-      if (newIdx < 0 || newIdx >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+      const next = prev.filter((c) => c !== source);
+      next.splice(next.indexOf(targetCol), 0, source);
       return next;
     });
   }
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <input
           type="text"
           placeholder="Search name or department..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-64 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          className="w-56 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         />
         <select
           value={departmentFilter}
           onChange={(e) => setDepartmentFilter(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">All departments</option>
           {departments.map((d) => (
@@ -184,13 +188,13 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as "all" | EmployeeStatus)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">All statuses</option>
           <option value="working">At work</option>
           <option value="vacation">On vacation</option>
         </select>
-        <span className="text-sm text-slate-400">
+        <span className="text-xs text-slate-400">
           {visibleRows.length} of {rows.length}
         </span>
       </div>
@@ -199,38 +203,37 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
             <tr>
-              {columnOrder.map((col, idx) => (
-                <th key={col} className="whitespace-nowrap px-4 py-2.5 font-medium">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleSort(col)}
-                      className="flex items-center gap-1 hover:text-slate-900"
-                    >
-                      {COLUMN_LABELS[col]}
-                      {sortColumn === col && <span>{sortDirection === "asc" ? "▲" : "▼"}</span>}
-                    </button>
-                    <div className="ml-auto flex gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => moveColumn(col, -1)}
-                        disabled={idx === 0}
-                        aria-label={`Move ${COLUMN_LABELS[col]} column left`}
-                        className="rounded px-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:pointer-events-none disabled:opacity-30"
-                      >
-                        ◀
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveColumn(col, 1)}
-                        disabled={idx === columnOrder.length - 1}
-                        aria-label={`Move ${COLUMN_LABELS[col]} column right`}
-                        className="rounded px-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:pointer-events-none disabled:opacity-30"
-                      >
-                        ▶
-                      </button>
-                    </div>
-                  </div>
+              {columnOrder.map((col) => (
+                <th
+                  key={col}
+                  draggable
+                  onDragStart={() => {
+                    draggedColumn.current = col;
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOverColumn(col);
+                  }}
+                  onDragLeave={() => setDragOverColumn((c) => (c === col ? null : c))}
+                  onDrop={() => handleDrop(col)}
+                  onDragEnd={() => {
+                    draggedColumn.current = null;
+                    setDragOverColumn(null);
+                  }}
+                  className={`cursor-move select-none whitespace-nowrap px-2.5 py-1.5 font-medium ${
+                    dragOverColumn === col ? "bg-indigo-50" : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleSort(col)}
+                    className="flex items-center gap-1 hover:text-slate-900"
+                  >
+                    {COLUMN_LABELS[col]}
+                    {sortColumn === col && (
+                      <span className="text-[10px]">{sortDirection === "asc" ? "▲" : "▼"}</span>
+                    )}
+                  </button>
                 </th>
               ))}
             </tr>
@@ -239,7 +242,7 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
             {visibleRows.map((row) => (
               <tr key={row.id} className="border-b border-slate-100 last:border-0">
                 {columnOrder.map((col) => (
-                  <td key={col} className="whitespace-nowrap px-4 py-3 text-slate-600">
+                  <td key={col} className="whitespace-nowrap px-2.5 py-2 text-slate-600">
                     {renderCell(row, col)}
                   </td>
                 ))}
@@ -247,7 +250,7 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
             ))}
             {visibleRows.length === 0 && (
               <tr>
-                <td colSpan={columnOrder.length} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={columnOrder.length} className="px-2.5 py-6 text-center text-slate-400">
                   No employees match these filters.
                 </td>
               </tr>
