@@ -96,9 +96,8 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
     case "status":
       return row.status === "working" ? "At work" : "On vacation";
     case "currentStage":
-      return row.role === "admin" ? "—" : row.currentStageTitle;
+      return row.percent === 100 ? "Finished" : row.currentStageTitle;
     case "progress":
-      if (row.role === "admin") return "—";
       return (
         <div className="flex items-center gap-1.5">
           <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">

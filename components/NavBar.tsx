@@ -33,10 +33,10 @@ export default async function NavBar() {
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <nav className="flex items-center gap-1 text-sm font-medium text-slate-600">
-          <Link href={isAdmin ? "/admin" : "/"} className="mr-4 flex items-center gap-2">
+          <span className="mr-4 flex items-center gap-2">
             <Logo size="sm" />
             <span className="font-semibold text-slate-900">Orbit</span>
-          </Link>
+          </span>
           {navLinks.map((link) => (
             <Link
               key={link.href}
