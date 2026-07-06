@@ -42,15 +42,15 @@ export type EmployeesTableQuery = {
   dir?: string;
 };
 
-const COLUMN_LABELS: Record<ColumnId, string> = {
-  name: "Name",
-  department: "Department",
-  birthdate: "Birth date",
-  probationStart: "Probation start date",
-  probationEnd: "Probation end date",
-  status: "Status",
-  currentStage: "Stage",
-  progress: "Process",
+const COLUMN_LABEL_LINES: Record<ColumnId, string[]> = {
+  name: ["Name"],
+  department: ["Department"],
+  birthdate: ["Birth date"],
+  probationStart: ["Probation", "start date"],
+  probationEnd: ["Probation", "end date"],
+  status: ["Status"],
+  currentStage: ["Stage"],
+  progress: ["Process"],
 };
 
 const COLUMN_WIDTHS: Record<ColumnId, string> = {
@@ -273,6 +273,21 @@ export default function EmployeesTable({
     });
   }
 
+  function clearFilters() {
+    setSearch("");
+    setDepartmentFilter("all");
+    setStatusFilter("all");
+    setRoleFilter("all");
+    setProcessFilter("all");
+    syncUrl({
+      search: "",
+      departmentFilter: "all",
+      statusFilter: "all",
+      roleFilter: "all",
+      processFilter: "all",
+    });
+  }
+
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -340,6 +355,13 @@ export default function EmployeesTable({
           <option value="finished">Finished</option>
           <option value="not_finished">Not finished</option>
         </select>
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+        >
+          Clear filters
+        </button>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -377,7 +399,13 @@ export default function EmployeesTable({
                     onClick={() => handleSort(col)}
                     className="flex w-full items-center justify-center gap-1 text-center hover:text-slate-900"
                   >
-                    <span className="leading-tight whitespace-normal">{COLUMN_LABELS[col]}</span>
+                    <span className="leading-tight">
+                      {COLUMN_LABEL_LINES[col].map((line) => (
+                        <span key={line} className="block">
+                          {line}
+                        </span>
+                      ))}
+                    </span>
                     {sortColumn === col && (
                       <span className="shrink-0 text-[10px]">{sortDirection === "asc" ? "▲" : "▼"}</span>
                     )}
@@ -390,7 +418,10 @@ export default function EmployeesTable({
             {visibleRows.map((row) => (
               <tr key={row.id} className="border-b border-slate-100 last:border-0">
                 {columnOrder.map((col) => (
-                  <td key={col} className="truncate px-2 py-2 text-slate-600">
+                  <td
+                    key={col}
+                    className={`truncate px-2 py-2 text-slate-600 ${col === "name" ? "text-left" : "text-center"}`}
+                  >
                     {renderCell(row, col)}
                   </td>
                 ))}

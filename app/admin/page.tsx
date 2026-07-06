@@ -58,7 +58,7 @@ export default async function AdminDashboardPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500">Company-wide onboarding overview.</p>
+        <p className="text-sm text-slate-500">Company-wide onboarding overview</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

@@ -14,7 +14,7 @@ export default async function AdminContentPage() {
     <div>
       <h1 className="mb-1 text-xl font-semibold text-slate-900">Onboarding content</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Changes here apply immediately to every employee who hasn&apos;t finished the stage yet.
+        Changes here apply immediately to every employee who hasn&apos;t finished the stage yet
       </p>
 
       <div className="flex flex-col gap-6">

@@ -68,7 +68,7 @@ export default async function AdminEmployeesPage({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Employees</h1>
-          <p className="text-sm text-slate-500">Onboarding progress across the company.</p>
+          <p className="text-sm text-slate-500">Onboarding progress across the company</p>
         </div>
         <Link
           href="/admin/employees/new"
