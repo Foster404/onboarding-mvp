@@ -8,7 +8,7 @@ export default function Logo({ size = "lg" }: { size?: keyof typeof sizes }) {
 
   return (
     <span
-      className={`relative flex ${box} shrink-0 items-center justify-center rounded-[22%] bg-gradient-to-br from-indigo-500 to-violet-600 font-bold text-white shadow-lg shadow-indigo-500/30 ring-1 ring-inset ring-white/20 ${text}`}
+      className={`relative flex ${box} shrink-0 select-none items-center justify-center rounded-[22%] bg-gradient-to-br from-indigo-500 to-violet-600 font-bold text-white shadow-lg shadow-indigo-500/30 ring-1 ring-inset ring-white/20 ${text}`}
     >
       O
       <svg
