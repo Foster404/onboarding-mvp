@@ -126,15 +126,6 @@ export default function NewEmployeePage() {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Date of birth</label>
-          <input
-            type="date"
-            value={birthdate}
-            onChange={(e) => setBirthdate(e.target.value)}
-            className={FIELD_CLASS}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">
             Probation started<span className="text-red-500">*</span>
           </label>
@@ -143,6 +134,15 @@ export default function NewEmployeePage() {
             required
             value={onboardingStartDate}
             onChange={(e) => setOnboardingStartDate(e.target.value)}
+            className={FIELD_CLASS}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700">Birth date</label>
+          <input
+            type="date"
+            value={birthdate}
+            onChange={(e) => setBirthdate(e.target.value)}
             className={FIELD_CLASS}
           />
         </div>

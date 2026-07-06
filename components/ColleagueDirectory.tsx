@@ -113,7 +113,7 @@ export default function ColleagueDirectory({ colleagues }: { colleagues: Colleag
                     <div className="text-slate-900">{c.phone ?? "—"}</div>
                   </div>
                   <div>
-                    <div className="text-slate-500">Date of birth</div>
+                    <div className="text-slate-500">Birth date</div>
                     <div className="text-slate-900">
                       {c.birthdate ? formatDayMonth(c.birthdate) : "—"}
                     </div>

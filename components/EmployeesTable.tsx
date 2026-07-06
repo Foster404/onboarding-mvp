@@ -32,11 +32,11 @@ type ColumnId =
 const COLUMN_LABELS: Record<ColumnId, string> = {
   name: "Name",
   department: "Department",
-  birthdate: "Date of birth",
-  probationStart: "Probation Start Date",
-  probationEnd: "Probation End Date",
+  birthdate: "Birth date",
+  probationStart: "Probation start date",
+  probationEnd: "Probation end date",
   status: "Status",
-  currentStage: "Current stage",
+  currentStage: "Stage",
   progress: "Overall progress",
 };
 

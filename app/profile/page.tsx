@@ -26,9 +26,9 @@ export default async function ProfilePage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-xl font-semibold text-slate-900">My Profile</h1>
+      <h1 className="mb-1 text-xl font-semibold text-slate-900">My profile</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Update your photo and date of birth. Other fields are managed by HR.
+        Update your photo and birth date. Other fields are managed by HR.
       </p>
       <ProfileEditor profile={current.profile} userId={current.userId} overallProgress={percent} />
     </div>

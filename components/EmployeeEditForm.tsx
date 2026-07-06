@@ -94,7 +94,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Date of birth</label>
+          <label className="text-sm font-medium text-slate-700">Birth date</label>
           <input
             type="date"
             value={birthdate}
@@ -103,7 +103,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Probation Start Date</label>
+          <label className="text-sm font-medium text-slate-700">Probation start date</label>
           <input
             type="date"
             value={onboardingStartDate}
@@ -126,7 +126,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Probation End Date</label>
+          <label className="text-sm font-medium text-slate-700">Probation end date</label>
           <input
             type="date"
             value={probationEndDate}

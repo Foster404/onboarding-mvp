@@ -117,7 +117,7 @@ export default function ProfileEditor({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="birthdate" className="text-sm font-medium text-slate-700">
-          Date of birth
+          Birth date
         </label>
         <input
           id="birthdate"
@@ -139,12 +139,12 @@ export default function ProfileEditor({
           <div className="text-xs text-slate-400">Managed by HR</div>
         </div>
         <div>
-          <div className="text-slate-500">Probation Start Date</div>
+          <div className="text-slate-500">Probation start date</div>
           <div className="font-medium text-slate-900">{formatDate(profile.onboarding_start_date)}</div>
           <div className="text-xs text-slate-400">Managed by HR</div>
         </div>
         <div>
-          <div className="text-slate-500">Probation End Date</div>
+          <div className="text-slate-500">Probation end date</div>
           <div className="font-medium text-slate-900">{formatDate(profile.probation_end_date)}</div>
           <div className="text-xs text-slate-400">Managed by HR</div>
         </div>

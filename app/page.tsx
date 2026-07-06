@@ -25,7 +25,7 @@ export default async function MyOnboardingPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-xl font-semibold text-slate-900">My Onboarding</h1>
+      <h1 className="mb-1 text-xl font-semibold text-slate-900">My onboarding</h1>
       <p className="mb-6 text-sm text-slate-500">
         Your 90-day plan. Check off items as you complete them.
       </p>

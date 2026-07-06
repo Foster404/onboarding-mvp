@@ -21,11 +21,11 @@ export default async function NavBar() {
     ? [
         { href: "/admin", label: "Dashboard" },
         { href: "/admin/employees", label: "Employees" },
-        { href: "/admin/content", label: "Onboarding Content" },
+        { href: "/admin/content", label: "Onboarding content" },
       ]
     : [
-        { href: "/", label: "My Onboarding" },
-        { href: "/profile", label: "My Profile" },
+        { href: "/", label: "My onboarding" },
+        { href: "/profile", label: "My profile" },
         { href: "/colleagues", label: "Colleagues" },
       ];
 
