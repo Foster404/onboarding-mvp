@@ -2,14 +2,9 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { computeStageProgress, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
+import { addDays, formatDate } from "@/lib/dates";
 import EmployeeEditForm from "@/components/EmployeeEditForm";
 import EmployeeStageStatus from "@/components/EmployeeStageStatus";
-
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-}
 
 export default async function EmployeeDetailPage({
   params,
@@ -40,8 +35,8 @@ export default async function EmployeeDetailPage({
       <div>
         <h1 className="text-xl font-semibold text-slate-900">{profile.full_name}</h1>
         <p className="text-sm text-slate-500">
-          Started {new Date(profile.onboarding_start_date).toLocaleDateString()} · Probation ends{" "}
-          {addDays(profile.onboarding_start_date, 90)} · Overall progress {percent}%
+          Started: {formatDate(profile.onboarding_start_date)} · Probation ends:{" "}
+          {formatDate(addDays(profile.onboarding_start_date, 90))} · Overall progress: {percent}%
         </p>
       </div>
 

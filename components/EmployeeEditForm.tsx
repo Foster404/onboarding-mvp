@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateEmployeeProfile, resetEmployeePassword } from "@/app/actions/admin-employees";
 import type { EmployeeStatus, Profile } from "@/types/database";
 import { DEPARTMENTS } from "@/lib/departments";
+import { addDays, formatDate } from "@/lib/dates";
 import Spinner from "@/components/Spinner";
 
 export default function EmployeeEditForm({ profile }: { profile: Profile }) {
@@ -69,7 +70,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -77,7 +78,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           >
             <option value="">Select a department</option>
             {DEPARTMENTS.map((d) => (
@@ -93,7 +94,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             type="date"
             value={birthdate}
             onChange={(e) => setBirthdate(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -102,7 +103,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             type="date"
             value={onboardingStartDate}
             onChange={(e) => setOnboardingStartDate(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -110,11 +111,17 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as EmployeeStatus)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           >
             <option value="working">At work</option>
             <option value="vacation">On vacation</option>
           </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700">Probation period</label>
+          <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            {formatDate(onboardingStartDate)} – {formatDate(addDays(onboardingStartDate, 90))}
+          </div>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">Vacation days remaining</label>
@@ -123,7 +130,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             min={0}
             value={vacationDays}
             onChange={(e) => setVacationDays(Number(e.target.value))}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
           <span className="text-xs text-slate-400">Manual for MVP; future 1C sync target.</span>
         </div>
