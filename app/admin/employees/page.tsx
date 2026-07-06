@@ -1,23 +1,28 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { computeStageProgress, currentStage, overallPercent } from "@/lib/onboarding-progress";
+import {
+  computeStageProgress,
+  currentStage,
+  fetchAllCompletedProgress,
+  overallPercent,
+} from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
 import EmployeesTable, { type EmployeeRow } from "@/components/EmployeesTable";
 
 export default async function AdminEmployeesPage() {
   const supabase = await createClient();
 
-  const [{ data: employees }, { data: stages }, { data: progress }] = await Promise.all([
+  const [{ data: employees }, { data: stages }, progress] = await Promise.all([
     supabase.from("profiles").select("*").order("full_name", { ascending: true }),
     supabase
       .from("stages")
       .select("*, checklist_items(*)")
       .order("sort_order", { ascending: true }),
-    supabase.from("employee_progress").select("profile_id, checklist_item_id").eq("completed", true),
+    fetchAllCompletedProgress(supabase),
   ]);
 
   const progressByEmployee = new Map<string, Set<string>>();
-  for (const row of progress ?? []) {
+  for (const row of progress) {
     if (!progressByEmployee.has(row.profile_id)) progressByEmployee.set(row.profile_id, new Set());
     progressByEmployee.get(row.profile_id)!.add(row.checklist_item_id);
   }

@@ -23,9 +23,13 @@ export default function Logo({ size = "lg" }: { size?: keyof typeof sizes }) {
             strokeWidth={ring}
             strokeOpacity="0.45"
           />
-        </g>
-        <g className="origin-[12px_12px] animate-[spin_9s_linear_infinite]">
-          <circle cx="22" cy="12" r={dot} fill="white" fillOpacity="0.9" />
+          <circle r={dot} fill="white" fillOpacity="0.9">
+            <animateMotion
+              dur="4s"
+              repeatCount="indefinite"
+              path="M 22.5,12 A 10.5,4.5 0 1,1 1.5,12 A 10.5,4.5 0 1,1 22.5,12"
+            />
+          </circle>
         </g>
       </svg>
     </span>

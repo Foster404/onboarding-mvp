@@ -31,7 +31,7 @@ export default async function NavBar() {
 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <nav className="flex items-center gap-1 text-sm font-medium text-slate-600">
           <span className="mr-4 flex items-center gap-2">
             <Logo size="sm" />

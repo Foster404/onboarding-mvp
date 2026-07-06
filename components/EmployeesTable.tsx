@@ -37,7 +37,18 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   probationEnd: "Probation end date",
   status: "Status",
   currentStage: "Stage",
-  progress: "Overall progress",
+  progress: "Process",
+};
+
+const COLUMN_WIDTHS: Record<ColumnId, string> = {
+  name: "18%",
+  department: "12%",
+  birthdate: "10%",
+  probationStart: "11%",
+  probationEnd: "11%",
+  status: "13%",
+  currentStage: "11%",
+  progress: "14%",
 };
 
 const DEFAULT_COLUMN_ORDER: ColumnId[] = [
@@ -76,19 +87,27 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
   switch (col) {
     case "name":
       return (
-        <span className="flex items-center gap-1.5">
-          <Link href={`/admin/employees/${row.id}`} className="font-medium text-slate-900 hover:underline">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <Link
+            href={`/admin/employees/${row.id}`}
+            title={row.fullName}
+            className="truncate font-medium text-slate-900 hover:underline"
+          >
             {row.fullName}
           </Link>
           {row.role === "admin" && (
-            <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+            <span className="shrink-0 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
               Admin
             </span>
           )}
         </span>
       );
     case "department":
-      return row.department ?? "—";
+      return (
+        <span className="block truncate" title={row.department ?? undefined}>
+          {row.department ?? "—"}
+        </span>
+      );
     case "birthdate":
       return row.birthdate ? formatDate(row.birthdate) : "—";
     case "probationStart":
@@ -220,8 +239,13 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full table-fixed text-left text-sm">
+          <colgroup>
+            {columnOrder.map((col) => (
+              <col key={col} style={{ width: COLUMN_WIDTHS[col] }} />
+            ))}
+          </colgroup>
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
             <tr>
               {columnOrder.map((col) => (
@@ -241,18 +265,18 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
                     draggedColumn.current = null;
                     setDragOverColumn(null);
                   }}
-                  className={`cursor-move select-none whitespace-nowrap px-2.5 py-1.5 font-medium ${
+                  className={`cursor-move select-none px-2 py-1.5 font-semibold ${
                     dragOverColumn === col ? "bg-indigo-50" : ""
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => handleSort(col)}
-                    className="flex items-center gap-1 hover:text-slate-900"
+                    className="flex w-full items-center gap-1 text-left hover:text-slate-900"
                   >
-                    {COLUMN_LABELS[col]}
+                    <span className="leading-tight whitespace-normal">{COLUMN_LABELS[col]}</span>
                     {sortColumn === col && (
-                      <span className="text-[10px]">{sortDirection === "asc" ? "▲" : "▼"}</span>
+                      <span className="shrink-0 text-[10px]">{sortDirection === "asc" ? "▲" : "▼"}</span>
                     )}
                   </button>
                 </th>
@@ -263,7 +287,7 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
             {visibleRows.map((row) => (
               <tr key={row.id} className="border-b border-slate-100 last:border-0">
                 {columnOrder.map((col) => (
-                  <td key={col} className="whitespace-nowrap px-2.5 py-2 text-slate-600">
+                  <td key={col} className="truncate px-2 py-2 text-slate-600">
                     {renderCell(row, col)}
                   </td>
                 ))}
@@ -271,7 +295,7 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
             ))}
             {visibleRows.length === 0 && (
               <tr>
-                <td colSpan={columnOrder.length} className="px-2.5 py-6 text-center text-slate-400">
+                <td colSpan={columnOrder.length} className="px-2 py-6 text-center text-slate-400">
                   No employees match these filters.
                 </td>
               </tr>
