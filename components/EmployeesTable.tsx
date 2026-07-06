@@ -2,11 +2,12 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { EmployeeStatus } from "@/types/database";
+import type { EmployeeStatus, UserRole } from "@/types/database";
 
 export type EmployeeRow = {
   id: string;
   fullName: string;
+  role: UserRole;
   department: string | null;
   status: EmployeeStatus;
   birthdate: string | null;
@@ -73,9 +74,16 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
   switch (col) {
     case "name":
       return (
-        <Link href={`/admin/employees/${row.id}`} className="font-medium text-slate-900 hover:underline">
-          {row.fullName}
-        </Link>
+        <span className="flex items-center gap-1.5">
+          <Link href={`/admin/employees/${row.id}`} className="font-medium text-slate-900 hover:underline">
+            {row.fullName}
+          </Link>
+          {row.role === "admin" && (
+            <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+              Admin
+            </span>
+          )}
+        </span>
       );
     case "department":
       return row.department ?? "—";
@@ -88,8 +96,9 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
     case "status":
       return row.status === "working" ? "At work" : "On vacation";
     case "currentStage":
-      return row.currentStageTitle;
+      return row.role === "admin" ? "—" : row.currentStageTitle;
     case "progress":
+      if (row.role === "admin") return "—";
       return (
         <div className="flex items-center gap-1.5">
           <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
@@ -111,6 +120,7 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<"all" | EmployeeStatus>("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
   const [dragOverColumn, setDragOverColumn] = useState<ColumnId | null>(null);
   const draggedColumn = useRef<ColumnId | null>(null);
 
@@ -129,7 +139,8 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
         (r.department ?? "").toLowerCase().includes(query);
       const matchesDept = departmentFilter === "all" || r.department === departmentFilter;
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      return matchesSearch && matchesDept && matchesStatus;
+      const matchesRole = roleFilter === "all" || r.role === roleFilter;
+      return matchesSearch && matchesDept && matchesStatus && matchesRole;
     });
 
     return [...filtered].sort((a, b) => {
@@ -139,7 +150,7 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
       if (av > bv) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [rows, search, departmentFilter, statusFilter, sortColumn, sortDirection]);
+  }, [rows, search, departmentFilter, statusFilter, roleFilter, sortColumn, sortDirection]);
 
   function handleSort(col: ColumnId) {
     if (sortColumn === col) {
@@ -193,6 +204,15 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
           <option value="all">All statuses</option>
           <option value="working">At work</option>
           <option value="vacation">On vacation</option>
+        </select>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value as "all" | UserRole)}
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+        >
+          <option value="all">Employees &amp; admins</option>
+          <option value="employee">Employees only</option>
+          <option value="admin">Admins only</option>
         </select>
         <span className="text-xs text-slate-400">
           {visibleRows.length} of {rows.length}

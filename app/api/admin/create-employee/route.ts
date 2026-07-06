@@ -24,10 +24,15 @@ export async function POST(request: Request) {
   const body = await request.json();
   const fullName = String(body.full_name ?? "").trim();
   const email = String(body.email ?? "").trim();
-  const department = body.department ? String(body.department).trim() : null;
+  const department = String(body.department ?? "").trim();
+  const birthdate = body.birthdate ? String(body.birthdate).trim() : null;
+  const onboardingStartDate = String(body.onboarding_start_date ?? "").trim();
 
-  if (!fullName || !email) {
-    return NextResponse.json({ error: "Full name and email are required" }, { status: 400 });
+  if (!fullName || !email || !department || !onboardingStartDate) {
+    return NextResponse.json(
+      { error: "Full name, email, department, and probation start date are required" },
+      { status: 400 }
+    );
   }
 
   const tempPassword = generateTempPassword();
@@ -48,6 +53,8 @@ export async function POST(request: Request) {
     full_name: fullName,
     email,
     department,
+    birthdate,
+    onboarding_start_date: onboardingStartDate,
     role: "employee",
     status: "working",
   });

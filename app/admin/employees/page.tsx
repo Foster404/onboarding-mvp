@@ -9,11 +9,7 @@ export default async function AdminEmployeesPage() {
   const supabase = await createClient();
 
   const [{ data: employees }, { data: stages }, { data: progress }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "employee")
-      .order("full_name", { ascending: true }),
+    supabase.from("profiles").select("*").order("full_name", { ascending: true }),
     supabase
       .from("stages")
       .select("*, checklist_items(*)")
@@ -36,6 +32,7 @@ export default async function AdminEmployeesPage() {
     return {
       id: employee.id,
       fullName: employee.full_name,
+      role: employee.role,
       department: employee.department,
       status: employee.status,
       birthdate: employee.birthdate,

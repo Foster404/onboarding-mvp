@@ -3,11 +3,18 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import Spinner from "@/components/Spinner";
+import { DEPARTMENTS } from "@/lib/departments";
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export default function NewEmployeePage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [department, setDepartment] = useState("");
+  const [birthdate, setBirthdate] = useState("");
+  const [onboardingStartDate, setOnboardingStartDate] = useState(today());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ email: string; tempPassword: string } | null>(null);
@@ -20,7 +27,13 @@ export default function NewEmployeePage() {
     const res = await fetch("/api/admin/create-employee", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ full_name: fullName, email, department }),
+      body: JSON.stringify({
+        full_name: fullName,
+        email,
+        department,
+        birthdate: birthdate || null,
+        onboarding_start_date: onboardingStartDate,
+      }),
     });
 
     const data = await res.json();
@@ -67,7 +80,9 @@ export default function NewEmployeePage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Full name</label>
+          <label className="text-sm font-medium text-slate-700">
+            Full name<span className="text-red-500">*</span>
+          </label>
           <input
             required
             value={fullName}
@@ -76,7 +91,9 @@ export default function NewEmployeePage() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Email</label>
+          <label className="text-sm font-medium text-slate-700">
+            Email<span className="text-red-500">*</span>
+          </label>
           <input
             type="email"
             required
@@ -86,20 +103,57 @@ export default function NewEmployeePage() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Department</label>
-          <input
+          <label className="text-sm font-medium text-slate-700">
+            Department<span className="text-red-500">*</span>
+          </label>
+          <select
+            required
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          >
+            <option value="" disabled>
+              Select a department
+            </option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700">Date of birth</label>
+          <input
+            type="date"
+            value={birthdate}
+            onChange={(e) => setBirthdate(e.target.value)}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
           />
         </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-slate-700">
+            Probation started<span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            required
+            value={onboardingStartDate}
+            onChange={(e) => setOnboardingStartDate(e.target.value)}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          />
+        </div>
+
+        <p className="text-xs text-slate-400">
+          <span className="text-red-500">*</span> All fields are required except date of birth.
+        </p>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
         >
           {loading && <Spinner />}
           {loading ? "Creating..." : "Create employee"}
