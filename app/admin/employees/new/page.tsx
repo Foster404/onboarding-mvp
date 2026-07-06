@@ -5,6 +5,9 @@ import Link from "next/link";
 import Spinner from "@/components/Spinner";
 import { DEPARTMENTS } from "@/lib/departments";
 
+const FIELD_CLASS =
+  "h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
+
 function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -87,7 +90,7 @@ export default function NewEmployeePage() {
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -99,7 +102,7 @@ export default function NewEmployeePage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -110,7 +113,7 @@ export default function NewEmployeePage() {
             required
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           >
             <option value="" disabled>
               Select a department
@@ -128,7 +131,7 @@ export default function NewEmployeePage() {
             type="date"
             value={birthdate}
             onChange={(e) => setBirthdate(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -140,7 +143,7 @@ export default function NewEmployeePage() {
             required
             value={onboardingStartDate}
             onChange={(e) => setOnboardingStartDate(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
 

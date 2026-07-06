@@ -1,5 +1,5 @@
 export type UserRole = "employee" | "admin";
-export type EmployeeStatus = "working" | "vacation";
+export type EmployeeStatus = "working" | "vacation" | "maternity_leave" | "resigned";
 export type MediaType = "video" | "presentation";
 
 // NOTE: these must stay `type` aliases, not `interface` declarations - with

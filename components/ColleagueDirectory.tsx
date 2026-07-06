@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { ColleagueDirectoryRow } from "@/types/database";
+import { formatDayMonth } from "@/lib/dates";
+import { STATUS_LABELS, STATUS_BADGE_CLASS } from "@/lib/employee-status";
 
 const BIRTHDAY_SOON_WINDOW_DAYS = 7;
 
@@ -16,10 +18,6 @@ function daysUntilNextBirthday(birthdate: string): number {
   if (next < today) next.setFullYear(next.getFullYear() + 1);
 
   return Math.round((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-function formatBirthdate(birthdate: string): string {
-  return new Date(birthdate).toLocaleDateString(undefined, { month: "long", day: "numeric" });
 }
 
 export default function ColleagueDirectory({ colleagues }: { colleagues: ColleagueDirectoryRow[] }) {
@@ -93,17 +91,13 @@ export default function ColleagueDirectory({ colleagues }: { colleagues: Colleag
                 <div className="flex items-center gap-2">
                   {birthdaySoon && c.birthdate && (
                     <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-700">
-                      Birthday {formatBirthdate(c.birthdate)}
+                      Birthday {formatDayMonth(c.birthdate)}
                     </span>
                   )}
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      c.status === "working"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-amber-100 text-amber-700"
-                    }`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE_CLASS[c.status]}`}
                   >
-                    {c.status === "working" ? "At work" : "On vacation"}
+                    {STATUS_LABELS[c.status]}
                   </span>
                 </div>
               </button>
@@ -121,7 +115,7 @@ export default function ColleagueDirectory({ colleagues }: { colleagues: Colleag
                   <div>
                     <div className="text-slate-500">Date of birth</div>
                     <div className="text-slate-900">
-                      {c.birthdate ? formatBirthdate(c.birthdate) : "—"}
+                      {c.birthdate ? formatDayMonth(c.birthdate) : "—"}
                     </div>
                   </div>
                 </div>

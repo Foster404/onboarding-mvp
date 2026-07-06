@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { EmployeeStatus, UserRole } from "@/types/database";
 import { formatDate } from "@/lib/dates";
+import { STATUS_LABELS, STATUS_OPTIONS } from "@/lib/employee-status";
 
 export type EmployeeRow = {
   id: string;
@@ -95,7 +96,7 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
     case "probationEnd":
       return formatDate(row.probationEndDate);
     case "status":
-      return row.status === "working" ? "At work" : "On vacation";
+      return STATUS_LABELS[row.status];
     case "currentStage":
       return row.percent === 100 ? "Finished" : row.currentStageTitle;
     case "progress":
@@ -202,8 +203,11 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
           className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">All statuses</option>
-          <option value="working">At work</option>
-          <option value="vacation">On vacation</option>
+          {STATUS_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </select>
         <select
           value={roleFilter}

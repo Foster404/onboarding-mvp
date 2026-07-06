@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateEmployeeProfile, resetEmployeePassword } from "@/app/actions/admin-employees";
 import type { EmployeeStatus, Profile } from "@/types/database";
 import { DEPARTMENTS } from "@/lib/departments";
+import { STATUS_OPTIONS } from "@/lib/employee-status";
 import Spinner from "@/components/Spinner";
 
 const FIELD_CLASS =
@@ -117,8 +118,11 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             onChange={(e) => setStatus(e.target.value as EmployeeStatus)}
             className={FIELD_CLASS}
           >
-            <option value="working">At work</option>
-            <option value="vacation">On vacation</option>
+            {STATUS_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
         </div>
         <div className="flex flex-col gap-1">

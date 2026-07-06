@@ -12,3 +12,11 @@ export function formatDate(dateStr: string): string {
   const year = d.getUTCFullYear();
   return `${day}.${month}.${year}`;
 }
+
+// Day + month only (no year), e.g. 05.07. Used for recurring events like birthdays.
+export function formatDayMonth(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  return `${day}.${month}`;
+}
