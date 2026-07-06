@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { EmployeeStatus, UserRole } from "@/types/database";
 import { formatDate } from "@/lib/dates";
@@ -28,6 +29,18 @@ type ColumnId =
   | "status"
   | "currentStage"
   | "progress";
+
+type ProcessFilter = "all" | "finished" | "not_finished";
+
+export type EmployeesTableQuery = {
+  q?: string;
+  dept?: string;
+  status?: string;
+  role?: string;
+  process?: string;
+  sort?: string;
+  dir?: string;
+};
 
 const COLUMN_LABELS: Record<ColumnId, string> = {
   name: "Name",
@@ -61,6 +74,12 @@ const DEFAULT_COLUMN_ORDER: ColumnId[] = [
   "currentStage",
   "progress",
 ];
+
+const COLUMN_IDS = new Set<string>(DEFAULT_COLUMN_ORDER);
+
+function isColumnId(value: string): value is ColumnId {
+  return COLUMN_IDS.has(value);
+}
 
 function sortValue(row: EmployeeRow, col: ColumnId): string | number {
   switch (col) {
@@ -120,7 +139,7 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
       return row.percent === 100 ? "Finished" : row.currentStageTitle;
     case "progress":
       return (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-center gap-1.5">
           <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
             <div
               className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
@@ -133,16 +152,69 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
   }
 }
 
-export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
+export default function EmployeesTable({
+  rows,
+  initialQuery,
+}: {
+  rows: EmployeeRow[];
+  initialQuery?: EmployeesTableQuery;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(DEFAULT_COLUMN_ORDER);
-  const [sortColumn, setSortColumn] = useState<ColumnId>("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [search, setSearch] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | EmployeeStatus>("all");
-  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
+  const [sortColumn, setSortColumn] = useState<ColumnId>(
+    initialQuery?.sort && isColumnId(initialQuery.sort) ? initialQuery.sort : "name"
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    initialQuery?.dir === "desc" ? "desc" : "asc"
+  );
+  const [search, setSearch] = useState(initialQuery?.q ?? "");
+  const [departmentFilter, setDepartmentFilter] = useState(initialQuery?.dept ?? "all");
+  const [statusFilter, setStatusFilter] = useState<"all" | EmployeeStatus>(
+    (initialQuery?.status as EmployeeStatus | undefined) ?? "all"
+  );
+  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>(
+    (initialQuery?.role as UserRole | undefined) ?? "all"
+  );
+  const [processFilter, setProcessFilter] = useState<ProcessFilter>(
+    (initialQuery?.process as ProcessFilter | undefined) ?? "all"
+  );
   const [dragOverColumn, setDragOverColumn] = useState<ColumnId | null>(null);
   const draggedColumn = useRef<ColumnId | null>(null);
+
+  function syncUrl(next: {
+    search?: string;
+    departmentFilter?: string;
+    statusFilter?: string;
+    roleFilter?: string;
+    processFilter?: string;
+    sortColumn?: string;
+    sortDirection?: string;
+  }) {
+    const merged = {
+      search,
+      departmentFilter,
+      statusFilter,
+      roleFilter,
+      processFilter,
+      sortColumn,
+      sortDirection,
+      ...next,
+    };
+
+    const params = new URLSearchParams();
+    if (merged.search) params.set("q", merged.search);
+    if (merged.departmentFilter !== "all") params.set("dept", merged.departmentFilter);
+    if (merged.statusFilter !== "all") params.set("status", merged.statusFilter);
+    if (merged.roleFilter !== "all") params.set("role", merged.roleFilter);
+    if (merged.processFilter !== "all") params.set("process", merged.processFilter);
+    if (merged.sortColumn !== "name") params.set("sort", merged.sortColumn);
+    if (merged.sortDirection !== "asc") params.set("dir", merged.sortDirection);
+
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   const departments = useMemo(
     () =>
@@ -160,7 +232,11 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
       const matchesDept = departmentFilter === "all" || r.department === departmentFilter;
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       const matchesRole = roleFilter === "all" || r.role === roleFilter;
-      return matchesSearch && matchesDept && matchesStatus && matchesRole;
+      const matchesProcess =
+        processFilter === "all" ||
+        (processFilter === "finished" && r.percent === 100) ||
+        (processFilter === "not_finished" && r.percent >= 0 && r.percent <= 90);
+      return matchesSearch && matchesDept && matchesStatus && matchesRole && matchesProcess;
     });
 
     return [...filtered].sort((a, b) => {
@@ -170,14 +246,17 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
       if (av > bv) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [rows, search, departmentFilter, statusFilter, roleFilter, sortColumn, sortDirection]);
+  }, [rows, search, departmentFilter, statusFilter, roleFilter, processFilter, sortColumn, sortDirection]);
 
   function handleSort(col: ColumnId) {
     if (sortColumn === col) {
-      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+      const nextDirection = sortDirection === "asc" ? "desc" : "asc";
+      setSortDirection(nextDirection);
+      syncUrl({ sortDirection: nextDirection });
     } else {
       setSortColumn(col);
       setSortDirection("asc");
+      syncUrl({ sortColumn: col, sortDirection: "asc" });
     }
   }
 
@@ -201,12 +280,18 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
           type="text"
           placeholder="Search name or department..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            syncUrl({ search: e.target.value });
+          }}
           className="w-56 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         />
         <select
           value={departmentFilter}
-          onChange={(e) => setDepartmentFilter(e.target.value)}
+          onChange={(e) => {
+            setDepartmentFilter(e.target.value);
+            syncUrl({ departmentFilter: e.target.value });
+          }}
           className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">All departments</option>
@@ -218,7 +303,10 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
         </select>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as "all" | EmployeeStatus)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value as "all" | EmployeeStatus);
+            syncUrl({ statusFilter: e.target.value });
+          }}
           className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">All statuses</option>
@@ -230,12 +318,27 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
         </select>
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value as "all" | UserRole)}
+          onChange={(e) => {
+            setRoleFilter(e.target.value as "all" | UserRole);
+            syncUrl({ roleFilter: e.target.value });
+          }}
           className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">Employees &amp; admins</option>
           <option value="employee">Employees only</option>
           <option value="admin">Admins only</option>
+        </select>
+        <select
+          value={processFilter}
+          onChange={(e) => {
+            setProcessFilter(e.target.value as ProcessFilter);
+            syncUrl({ processFilter: e.target.value });
+          }}
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+        >
+          <option value="all">All process</option>
+          <option value="finished">Finished</option>
+          <option value="not_finished">Not finished</option>
         </select>
       </div>
 
@@ -265,14 +368,14 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
                     draggedColumn.current = null;
                     setDragOverColumn(null);
                   }}
-                  className={`cursor-move select-none px-2 py-1.5 font-semibold ${
+                  className={`cursor-move select-none px-2 py-1.5 text-center font-semibold ${
                     dragOverColumn === col ? "bg-indigo-50" : ""
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => handleSort(col)}
-                    className="flex w-full items-center gap-1 text-left hover:text-slate-900"
+                    className="flex w-full items-center justify-center gap-1 text-center hover:text-slate-900"
                   >
                     <span className="leading-tight whitespace-normal">{COLUMN_LABELS[col]}</span>
                     {sortColumn === col && (

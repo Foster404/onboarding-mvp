@@ -5,6 +5,7 @@ import type { StageWithItems } from "@/lib/onboarding-progress";
 import { formatDate } from "@/lib/dates";
 import EmployeeEditForm from "@/components/EmployeeEditForm";
 import EmployeeStageStatus from "@/components/EmployeeStageStatus";
+import BackButton from "@/components/BackButton";
 
 export default async function EmployeeDetailPage({
   params,
@@ -32,12 +33,15 @@ export default async function EmployeeDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">{profile.full_name}</h1>
-        <p className="text-sm text-slate-500">
-          Started: {formatDate(profile.onboarding_start_date)} · Probation ends:{" "}
-          {formatDate(profile.probation_end_date)} · Overall progress: {percent}%
-        </p>
+      <div className="flex items-start gap-2">
+        <BackButton />
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">{profile.full_name}</h1>
+          <p className="text-sm text-slate-500">
+            Started: {formatDate(profile.onboarding_start_date)} · Probation ends:{" "}
+            {formatDate(profile.probation_end_date)} · Overall progress: {percent}%
+          </p>
+        </div>
       </div>
 
       <EmployeeEditForm profile={profile} />

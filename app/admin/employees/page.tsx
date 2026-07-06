@@ -7,9 +7,25 @@ import {
   overallPercent,
 } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
-import EmployeesTable, { type EmployeeRow } from "@/components/EmployeesTable";
+import EmployeesTable, { type EmployeeRow, type EmployeesTableQuery } from "@/components/EmployeesTable";
 
-export default async function AdminEmployeesPage() {
+export default async function AdminEmployeesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  const initialQuery: EmployeesTableQuery = {
+    q: first(params.q),
+    dept: first(params.dept),
+    status: first(params.status),
+    role: first(params.role),
+    process: first(params.process),
+    sort: first(params.sort),
+    dir: first(params.dir),
+  };
+
   const supabase = await createClient();
 
   const [{ data: employees }, { data: stages }, progress] = await Promise.all([
@@ -62,7 +78,7 @@ export default async function AdminEmployeesPage() {
         </Link>
       </div>
 
-      <EmployeesTable rows={rows} />
+      <EmployeesTable rows={rows} initialQuery={initialQuery} />
     </div>
   );
 }
