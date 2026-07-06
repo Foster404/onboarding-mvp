@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeStageProgress, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
+import { formatDate } from "@/lib/dates";
 import PieChart from "@/components/PieChart";
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
@@ -102,7 +103,7 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-slate-600">
-                  {new Date(employee.onboarding_start_date).toLocaleDateString()}
+                  {formatDate(employee.onboarding_start_date)}
                 </td>
                 <td className="px-4 py-3 text-slate-600">{percentByEmployeeId.get(employee.id) ?? 0}%</td>
               </tr>

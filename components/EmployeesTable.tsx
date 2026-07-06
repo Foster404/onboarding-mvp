@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { EmployeeStatus, UserRole } from "@/types/database";
+import { formatDate } from "@/lib/dates";
 
 export type EmployeeRow = {
   id: string;
@@ -31,8 +32,8 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
   name: "Name",
   department: "Department",
   birthdate: "Date of birth",
-  probationStart: "Probation started",
-  probationEnd: "Probation ends",
+  probationStart: "Probation Start Date",
+  probationEnd: "Probation End Date",
   status: "Status",
   currentStage: "Current stage",
   progress: "Overall progress",
@@ -88,11 +89,11 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
     case "department":
       return row.department ?? "—";
     case "birthdate":
-      return row.birthdate ? new Date(row.birthdate).toLocaleDateString() : "—";
+      return row.birthdate ? formatDate(row.birthdate) : "—";
     case "probationStart":
-      return new Date(row.onboardingStartDate).toLocaleDateString();
+      return formatDate(row.onboardingStartDate);
     case "probationEnd":
-      return new Date(row.probationEndDate).toLocaleDateString();
+      return formatDate(row.probationEndDate);
     case "status":
       return row.status === "working" ? "At work" : "On vacation";
     case "currentStage":

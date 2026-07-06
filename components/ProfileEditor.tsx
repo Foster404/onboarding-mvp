@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
+import { formatDate } from "@/lib/dates";
 import Spinner from "@/components/Spinner";
 
 export default function ProfileEditor({
@@ -138,10 +139,13 @@ export default function ProfileEditor({
           <div className="text-xs text-slate-400">Managed by HR</div>
         </div>
         <div>
-          <div className="text-slate-500">Probation started</div>
-          <div className="font-medium text-slate-900">
-            {new Date(profile.onboarding_start_date).toLocaleDateString()}
-          </div>
+          <div className="text-slate-500">Probation Start Date</div>
+          <div className="font-medium text-slate-900">{formatDate(profile.onboarding_start_date)}</div>
+          <div className="text-xs text-slate-400">Managed by HR</div>
+        </div>
+        <div>
+          <div className="text-slate-500">Probation End Date</div>
+          <div className="font-medium text-slate-900">{formatDate(profile.probation_end_date)}</div>
           <div className="text-xs text-slate-400">Managed by HR</div>
         </div>
       </div>

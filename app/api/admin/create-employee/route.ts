@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { addDays } from "@/lib/dates";
 
 function generateTempPassword(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     department,
     birthdate,
     onboarding_start_date: onboardingStartDate,
+    probation_end_date: addDays(onboardingStartDate, 90),
     role: "employee",
     status: "working",
   });

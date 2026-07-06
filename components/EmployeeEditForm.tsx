@@ -4,14 +4,17 @@ import { useState } from "react";
 import { updateEmployeeProfile, resetEmployeePassword } from "@/app/actions/admin-employees";
 import type { EmployeeStatus, Profile } from "@/types/database";
 import { DEPARTMENTS } from "@/lib/departments";
-import { addDays, formatDate } from "@/lib/dates";
 import Spinner from "@/components/Spinner";
+
+const FIELD_CLASS =
+  "h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
 
 export default function EmployeeEditForm({ profile }: { profile: Profile }) {
   const [fullName, setFullName] = useState(profile.full_name);
   const [department, setDepartment] = useState(profile.department ?? "");
   const [birthdate, setBirthdate] = useState(profile.birthdate ?? "");
   const [onboardingStartDate, setOnboardingStartDate] = useState(profile.onboarding_start_date);
+  const [probationEndDate, setProbationEndDate] = useState(profile.probation_end_date);
   const [status, setStatus] = useState<EmployeeStatus>(profile.status);
   const [vacationDays, setVacationDays] = useState(profile.vacation_days_remaining);
   const [saving, setSaving] = useState(false);
@@ -49,6 +52,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
         department: department || null,
         birthdate: birthdate || null,
         onboarding_start_date: onboardingStartDate,
+        probation_end_date: probationEndDate,
         status,
         vacation_days_remaining: vacationDays,
       });
@@ -70,7 +74,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -78,7 +82,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           >
             <option value="">Select a department</option>
             {DEPARTMENTS.map((d) => (
@@ -94,16 +98,16 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             type="date"
             value={birthdate}
             onChange={(e) => setBirthdate(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Probation started</label>
+          <label className="text-sm font-medium text-slate-700">Probation Start Date</label>
           <input
             type="date"
             value={onboardingStartDate}
             onChange={(e) => setOnboardingStartDate(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -111,17 +115,20 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as EmployeeStatus)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           >
             <option value="working">At work</option>
             <option value="vacation">On vacation</option>
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Probation period</label>
-          <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-            {formatDate(onboardingStartDate)} – {formatDate(addDays(onboardingStartDate, 90))}
-          </div>
+          <label className="text-sm font-medium text-slate-700">Probation End Date</label>
+          <input
+            type="date"
+            value={probationEndDate}
+            onChange={(e) => setProbationEndDate(e.target.value)}
+            className={FIELD_CLASS}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">Vacation days remaining</label>
@@ -130,7 +137,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             min={0}
             value={vacationDays}
             onChange={(e) => setVacationDays(Number(e.target.value))}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className={FIELD_CLASS}
           />
           <span className="text-xs text-slate-400">Manual for MVP; future 1C sync target.</span>
         </div>

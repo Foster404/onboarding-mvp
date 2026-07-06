@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeStageProgress, currentStage, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
-import { addDays } from "@/lib/dates";
 import EmployeesTable, { type EmployeeRow } from "@/components/EmployeesTable";
 
 export default async function AdminEmployeesPage() {
@@ -37,7 +36,7 @@ export default async function AdminEmployeesPage() {
       status: employee.status,
       birthdate: employee.birthdate,
       onboardingStartDate: employee.onboarding_start_date,
-      probationEndDate: addDays(employee.onboarding_start_date, 90),
+      probationEndDate: employee.probation_end_date,
       currentStageTitle: current?.stage.title ?? "—",
       percent,
     };

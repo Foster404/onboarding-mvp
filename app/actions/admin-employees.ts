@@ -14,6 +14,7 @@ export async function updateEmployeeProfile(
     status?: EmployeeStatus;
     vacation_days_remaining?: number;
     onboarding_start_date?: string;
+    probation_end_date?: string;
   }
 ) {
   const supabase = await createClient();

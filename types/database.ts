@@ -19,6 +19,7 @@ export type Profile = {
   phone: string | null;
   vacation_days_remaining: number;
   onboarding_start_date: string;
+  probation_end_date: string;
   created_at: string;
 };
 

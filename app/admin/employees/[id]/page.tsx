@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { computeStageProgress, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
-import { addDays, formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
 import EmployeeEditForm from "@/components/EmployeeEditForm";
 import EmployeeStageStatus from "@/components/EmployeeStageStatus";
 
@@ -36,7 +36,7 @@ export default async function EmployeeDetailPage({
         <h1 className="text-xl font-semibold text-slate-900">{profile.full_name}</h1>
         <p className="text-sm text-slate-500">
           Started: {formatDate(profile.onboarding_start_date)} · Probation ends:{" "}
-          {formatDate(addDays(profile.onboarding_start_date, 90))} · Overall progress: {percent}%
+          {formatDate(profile.probation_end_date)} · Overall progress: {percent}%
         </p>
       </div>
 
