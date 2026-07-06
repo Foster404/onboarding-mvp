@@ -145,7 +145,7 @@ export default function NewEmployeePage() {
         </div>
 
         <p className="text-xs text-slate-400">
-          <span className="text-red-500">*</span> All fields are required except date of birth.
+          <span className="text-red-500">*</span> Required fields
         </p>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

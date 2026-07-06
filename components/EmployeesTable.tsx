@@ -214,9 +214,6 @@ export default function EmployeesTable({ rows }: { rows: EmployeeRow[] }) {
           <option value="employee">Employees only</option>
           <option value="admin">Admins only</option>
         </select>
-        <span className="text-xs text-slate-400">
-          {visibleRows.length} of {rows.length}
-        </span>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">

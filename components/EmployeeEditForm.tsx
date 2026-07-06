@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateEmployeeProfile, resetEmployeePassword } from "@/app/actions/admin-employees";
 import type { EmployeeStatus, Profile } from "@/types/database";
+import { DEPARTMENTS } from "@/lib/departments";
 import Spinner from "@/components/Spinner";
 
 export default function EmployeeEditForm({ profile }: { profile: Profile }) {
@@ -73,11 +74,18 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">Department</label>
-          <input
+          <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-          />
+          >
+            <option value="">Select a department</option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">Date of birth</label>
