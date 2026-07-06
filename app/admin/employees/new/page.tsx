@@ -51,7 +51,7 @@ export default function NewEmployeePage() {
             <span className="font-mono">{result.tempPassword}</span>
           </div>
         </div>
-        <Link href="/admin" className="text-sm font-medium text-slate-900 hover:underline">
+        <Link href="/admin/employees" className="text-sm font-medium text-slate-900 hover:underline">
           Back to employee list
         </Link>
       </div>

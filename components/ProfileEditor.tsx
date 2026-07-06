@@ -6,7 +6,15 @@ import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
 import Spinner from "@/components/Spinner";
 
-export default function ProfileEditor({ profile, userId }: { profile: Profile; userId: string }) {
+export default function ProfileEditor({
+  profile,
+  userId,
+  overallProgress,
+}: {
+  profile: Profile;
+  userId: string;
+  overallProgress: number;
+}) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [birthdate, setBirthdate] = useState(profile.birthdate ?? "");
@@ -66,6 +74,19 @@ export default function ProfileEditor({ profile, userId }: { profile: Profile; u
 
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900">Overall progress (90 days)</h2>
+          <span className="text-sm font-semibold text-indigo-700">{overallProgress}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-white/70">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all"
+            style={{ width: `${overallProgress}%` }}
+          />
+        </div>
+      </div>
+
       <div className="flex items-center gap-4">
         <div className="h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
           {photoUrl && (
@@ -114,6 +135,13 @@ export default function ProfileEditor({ profile, userId }: { profile: Profile; u
         <div>
           <div className="text-slate-500">Vacation days remaining</div>
           <div className="font-medium text-slate-900">{profile.vacation_days_remaining}</div>
+          <div className="text-xs text-slate-400">Managed by HR</div>
+        </div>
+        <div>
+          <div className="text-slate-500">Probation started</div>
+          <div className="font-medium text-slate-900">
+            {new Date(profile.onboarding_start_date).toLocaleDateString()}
+          </div>
           <div className="text-xs text-slate-400">Managed by HR</div>
         </div>
       </div>

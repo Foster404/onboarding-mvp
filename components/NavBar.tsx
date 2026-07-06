@@ -9,6 +9,7 @@ export default async function NavBar() {
   if (!current) return null;
 
   const { profile } = current;
+  const isAdmin = profile.role === "admin";
   const initials = profile.full_name
     .split(" ")
     .map((part) => part[0])
@@ -16,28 +17,35 @@ export default async function NavBar() {
     .join("")
     .toUpperCase();
 
+  const navLinks = isAdmin
+    ? [
+        { href: "/admin", label: "Dashboard" },
+        { href: "/admin/employees", label: "Employees" },
+        { href: "/admin/content", label: "Onboarding Content" },
+      ]
+    : [
+        { href: "/", label: "My Onboarding" },
+        { href: "/profile", label: "My Profile" },
+        { href: "/colleagues", label: "Colleagues" },
+      ];
+
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <nav className="flex items-center gap-1 text-sm font-medium text-slate-600">
-          <Link href="/" className="mr-4 flex items-center gap-2">
+          <Link href={isAdmin ? "/admin" : "/"} className="mr-4 flex items-center gap-2">
             <Logo size="sm" />
             <span className="font-semibold text-slate-900">Orbit</span>
           </Link>
-          <Link href="/" className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900">
-            My Onboarding
-          </Link>
-          <Link href="/profile" className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900">
-            My Profile
-          </Link>
-          <Link href="/colleagues" className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900">
-            Colleagues
-          </Link>
-          {profile.role === "admin" && (
-            <Link href="/admin" className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900">
-              Admin
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="whitespace-nowrap rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            >
+              {link.label}
             </Link>
-          )}
+          ))}
         </nav>
 
         <div className="flex items-center gap-3">

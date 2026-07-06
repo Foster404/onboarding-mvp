@@ -45,16 +45,22 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAdminRoute) {
+  if (user && (isAdminRoute || path === "/")) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    if (profile?.role !== "admin") {
+    if (isAdminRoute && profile?.role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+
+    if (path === "/" && profile?.role === "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
   }
