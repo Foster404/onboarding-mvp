@@ -30,9 +30,10 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path === "/login";
+  const isPublicRoute = isAuthRoute || path === "/forgot-password" || path === "/reset-password";
   const isAdminRoute = path.startsWith("/admin");
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
