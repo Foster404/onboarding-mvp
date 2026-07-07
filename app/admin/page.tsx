@@ -8,6 +8,7 @@ import type { EmployeeStatus } from "@/types/database";
 import PieChart from "@/components/PieChart";
 import BarList from "@/components/BarList";
 import StackedBar from "@/components/StackedBar";
+import VerticalBarChart from "@/components/VerticalBarChart";
 
 const STATUS_COLORS: Record<EmployeeStatus, string> = {
   working: "#10b981",
@@ -198,7 +199,7 @@ export default async function AdminDashboardPage() {
         </Card>
 
         <Card title="Onboarding stage funnel">
-          <BarList items={stageFunnel} />
+          <VerticalBarChart items={stageFunnel} />
         </Card>
 
         <Card title="Department rollup">
