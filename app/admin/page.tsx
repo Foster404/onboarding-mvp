@@ -107,10 +107,7 @@ export default async function AdminDashboardPage() {
     color: STATUS_COLORS[status],
   }));
 
-  // Department rollup: headcount (everyone) vs. average progress, which is
-  // scored only over employees still onboarding - finished employees would
-  // otherwise pull every department's average toward 100% and hide who's
-  // actually behind.
+  // Department rollup: total headcount per department.
   const byDepartment = new Map<string, { count: number; activeCount: number; activePercentSum: number }>();
   for (const e of employeeProgress) {
     const key = e.employee.department ?? "No department";
@@ -123,22 +120,19 @@ export default async function AdminDashboardPage() {
     byDepartment.set(key, entry);
   }
   const departmentRollup = Array.from(byDepartment.entries())
-    .map(([label, { count, activeCount, activePercentSum }]) => ({
-      label,
-      value: count,
-      sublabel:
-        activeCount === 0 ? "· all finished" : `· ${Math.round(activePercentSum / activeCount)}% avg`,
-      color: "#818cf8",
-    }))
+    .map(([label, { count }]) => ({ label, value: count, color: "#818cf8" }))
     .sort((a, b) => b.value - a.value);
 
-  // Same breakdown, but headcount only for people still in the onboarding
-  // process (as opposed to the department rollup's total headcount).
+  // Same breakdown, but headcount and average progress only for people
+  // still in the onboarding process (as opposed to the department rollup's
+  // total headcount) - this is where the average actually means something,
+  // since finished employees would otherwise pull it toward 100%.
   const departmentInProgress = Array.from(byDepartment.entries())
     .filter(([, { activeCount }]) => activeCount > 0)
-    .map(([label, { activeCount }]) => ({
+    .map(([label, { activeCount, activePercentSum }]) => ({
       label,
       value: activeCount,
+      sublabel: `· ${Math.round(activePercentSum / activeCount)}% avg`,
       color: "#a78bfa",
     }))
     .sort((a, b) => b.value - a.value);
