@@ -20,3 +20,27 @@ export function formatDayMonth(dateStr: string): string {
   const month = String(d.getUTCMonth() + 1).padStart(2, "0");
   return `${day}.${month}`;
 }
+
+// Days from today until the next occurrence of this birthdate (0 = today,
+// wraps to next year once it's passed).
+export function daysUntilNextBirthday(birthdate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const bday = new Date(birthdate);
+  const next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+  next.setHours(0, 0, 0, 0);
+
+  if (next < today) next.setFullYear(next.getFullYear() + 1);
+
+  return Math.round((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// Whole days from today until this date (negative if already past).
+export function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setUTCHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}

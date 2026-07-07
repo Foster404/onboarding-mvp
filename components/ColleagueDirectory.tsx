@@ -2,23 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { ColleagueDirectoryRow } from "@/types/database";
-import { formatDayMonth } from "@/lib/dates";
+import { daysUntilNextBirthday, formatDayMonth } from "@/lib/dates";
 import { STATUS_LABELS, STATUS_BADGE_CLASS } from "@/lib/employee-status";
 
 const BIRTHDAY_SOON_WINDOW_DAYS = 7;
-
-function daysUntilNextBirthday(birthdate: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const bday = new Date(birthdate);
-  const next = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
-  next.setHours(0, 0, 0, 0);
-
-  if (next < today) next.setFullYear(next.getFullYear() + 1);
-
-  return Math.round((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 export default function ColleagueDirectory({ colleagues }: { colleagues: ColleagueDirectoryRow[] }) {
   const [search, setSearch] = useState("");
