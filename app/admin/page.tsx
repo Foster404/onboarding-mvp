@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
     .sort(
       (a, b) => new Date(b.onboarding_start_date).getTime() - new Date(a.onboarding_start_date).getTime()
     )
-    .slice(0, 10);
+    .slice(0, 5);
 
   // Stage funnel: how many still-active employees currently sit in each
   // stage. Finished employees are excluded - the point of this chart is to
@@ -276,7 +276,7 @@ export default async function AdminDashboardPage() {
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-900">Last 10 started onboarding</h2>
+          <h2 className="text-base font-semibold text-slate-900">Last 5 started onboarding</h2>
         </div>
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
