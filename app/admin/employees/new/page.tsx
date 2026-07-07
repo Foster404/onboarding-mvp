@@ -72,12 +72,12 @@ export default function NewEmployeePage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto max-w-lg">
       <div className="mb-1 flex items-start gap-2">
         <BackButton />
         <h1 className="text-xl font-semibold text-slate-900">New employee</h1>
       </div>
-      <p className="mb-6 text-sm text-slate-500">
+      <p className="mb-6 text-sm whitespace-nowrap text-slate-500">
         Creates their login with a temporary password generated for you to share
       </p>
 
