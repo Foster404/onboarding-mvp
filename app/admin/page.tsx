@@ -94,13 +94,16 @@ export default async function AdminDashboardPage() {
   }));
 
   // Status breakdown across every profile (employees and admins alike).
+  // Fixed order so Resigned always lands last, rather than whatever order
+  // the rows happened to come back from the database.
+  const STATUS_ORDER: EmployeeStatus[] = ["working", "vacation", "maternity_leave", "resigned"];
   const statusCounts = new Map<EmployeeStatus, number>();
   for (const p of allProfiles) {
     statusCounts.set(p.status, (statusCounts.get(p.status) ?? 0) + 1);
   }
-  const statusBreakdown = Array.from(statusCounts.entries()).map(([status, count]) => ({
+  const statusBreakdown = STATUS_ORDER.map((status) => ({
     label: STATUS_LABELS[status],
-    value: count,
+    value: statusCounts.get(status) ?? 0,
     color: STATUS_COLORS[status],
   }));
 
@@ -126,6 +129,17 @@ export default async function AdminDashboardPage() {
       sublabel:
         activeCount === 0 ? "· all finished" : `· ${Math.round(activePercentSum / activeCount)}% avg`,
       color: "#818cf8",
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  // Same breakdown, but headcount only for people still in the onboarding
+  // process (as opposed to the department rollup's total headcount).
+  const departmentInProgress = Array.from(byDepartment.entries())
+    .filter(([, { activeCount }]) => activeCount > 0)
+    .map(([label, { activeCount }]) => ({
+      label,
+      value: activeCount,
+      color: "#a78bfa",
     }))
     .sort((a, b) => b.value - a.value);
 
@@ -195,6 +209,10 @@ export default async function AdminDashboardPage() {
 
         <Card title="Department rollup">
           <BarList items={departmentRollup} />
+        </Card>
+
+        <Card title="In onboarding by department">
+          <BarList items={departmentInProgress} />
         </Card>
       </div>
 

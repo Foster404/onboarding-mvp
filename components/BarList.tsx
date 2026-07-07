@@ -26,7 +26,7 @@ export default function BarList({ items }: { items: BarListItem[] }) {
               }}
             />
           </div>
-          <span className="shrink-0 whitespace-nowrap text-right font-medium text-slate-900">
+          <span className="w-28 shrink-0 whitespace-nowrap text-right font-medium text-slate-900">
             {item.value}
             {item.sublabel && <span className="ml-1 font-normal text-slate-400">{item.sublabel}</span>}
           </span>
