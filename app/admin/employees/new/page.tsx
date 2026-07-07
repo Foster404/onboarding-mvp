@@ -78,7 +78,7 @@ export default function NewEmployeePage() {
         <h1 className="text-xl font-semibold text-slate-900">New employee</h1>
       </div>
       <p className="mb-6 text-sm text-slate-500">
-        Creates their login. A temporary password is generated for you to share.
+        Creates their login with a temporary password generated for you to share
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
