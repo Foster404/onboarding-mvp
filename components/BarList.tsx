@@ -14,7 +14,7 @@ export default function BarList({ items }: { items: BarListItem[] }) {
     <ul className="flex flex-col gap-2.5">
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-3 text-sm">
-          <span className="w-28 shrink-0 truncate text-slate-600" title={item.label}>
+          <span className="w-36 shrink-0 truncate text-slate-600" title={item.label}>
             {item.label}
           </span>
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">

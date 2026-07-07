@@ -7,6 +7,7 @@ import { STATUS_LABELS } from "@/lib/employee-status";
 import type { EmployeeStatus } from "@/types/database";
 import PieChart from "@/components/PieChart";
 import BarList from "@/components/BarList";
+import StackedBar from "@/components/StackedBar";
 
 const STATUS_COLORS: Record<EmployeeStatus, string> = {
   working: "#10b981",
@@ -66,10 +67,6 @@ export default async function AdminDashboardPage() {
 
   const finished = employeeProgress.filter((e) => e.percent === 100);
   const active = employeeProgress.filter((e) => e.percent < 100);
-  const averageActivePercent =
-    active.length === 0
-      ? 0
-      : Math.round(active.reduce((sum, e) => sum + e.percent, 0) / active.length);
 
   const percentByEmployeeId = new Map(employeeProgress.map((e) => [e.employee.id, e.percent]));
 
@@ -79,16 +76,14 @@ export default async function AdminDashboardPage() {
     )
     .slice(0, 10);
 
-  // Stage funnel: how many active employees currently sit in each stage,
-  // plus a Finished bucket for anyone at 100%.
-  const stageFunnel = [
-    ...stageList.map((stage) => ({
-      label: stage.title,
-      value: active.filter((e) => e.currentStageTitle === stage.title).length,
-      color: "#4f46e5",
-    })),
-    { label: "Finished", value: finished.length, color: "#10b981" },
-  ];
+  // Stage funnel: how many still-active employees currently sit in each
+  // stage. Finished employees are excluded - the point of this chart is to
+  // show where people are stuck, not to re-state the Finished count.
+  const stageFunnel = stageList.map((stage) => ({
+    label: stage.title,
+    value: active.filter((e) => e.currentStageTitle === stage.title).length,
+    color: "#4f46e5",
+  }));
 
   // Status breakdown across every profile (employees and admins alike).
   const statusCounts = new Map<EmployeeStatus, number>();
@@ -101,32 +96,40 @@ export default async function AdminDashboardPage() {
     color: STATUS_COLORS[status],
   }));
 
-  // Department rollup: headcount and average progress per department.
-  const byDepartment = new Map<string, { count: number; percentSum: number }>();
+  // Department rollup: headcount (everyone) vs. average progress, which is
+  // scored only over employees still onboarding - finished employees would
+  // otherwise pull every department's average toward 100% and hide who's
+  // actually behind.
+  const byDepartment = new Map<string, { count: number; activeCount: number; activePercentSum: number }>();
   for (const e of employeeProgress) {
     const key = e.employee.department ?? "No department";
-    const entry = byDepartment.get(key) ?? { count: 0, percentSum: 0 };
+    const entry = byDepartment.get(key) ?? { count: 0, activeCount: 0, activePercentSum: 0 };
     entry.count += 1;
-    entry.percentSum += e.percent;
+    if (e.percent < 100) {
+      entry.activeCount += 1;
+      entry.activePercentSum += e.percent;
+    }
     byDepartment.set(key, entry);
   }
   const departmentRollup = Array.from(byDepartment.entries())
-    .map(([label, { count, percentSum }]) => ({
+    .map(([label, { count, activeCount, activePercentSum }]) => ({
       label,
       value: count,
-      sublabel: `· ${Math.round(percentSum / count)}% avg`,
+      sublabel:
+        activeCount === 0 ? "· all finished" : `· ${Math.round(activePercentSum / activeCount)}% avg`,
       color: "#818cf8",
     }))
     .sort((a, b) => b.value - a.value);
 
   // At risk: probation ends within two weeks (or already has) but the
-  // employee hasn't finished onboarding yet.
-  const atRisk = employeeProgress
-    .filter((e) => e.percent < 100)
+  // employee hasn't finished onboarding yet. Resigned employees are excluded
+  // - their probation clock no longer matters once they've left.
+  const atRiskAll = employeeProgress
+    .filter((e) => e.percent < 100 && e.employee.status !== "resigned")
     .map((e) => ({ ...e, daysLeft: daysUntil(e.employee.probation_end_date) }))
     .filter((e) => e.daysLeft <= AT_RISK_WINDOW_DAYS)
-    .sort((a, b) => a.daysLeft - b.daysLeft)
-    .slice(0, 10);
+    .sort((a, b) => a.daysLeft - b.daysLeft);
+  const atRisk = atRiskAll.slice(0, 10);
 
   // Upcoming birthdays across the whole company.
   const upcomingBirthdays = allProfiles
@@ -147,7 +150,7 @@ export default async function AdminDashboardPage() {
         <StatCard label="Total employees" value={allProfiles.length} />
         <StatCard label="Active onboarding" value={active.length} />
         <StatCard label="Finished onboarding" value={finished.length} />
-        <StatCard label="Average progress" value={`${averageActivePercent}%`} />
+        <StatCard label="At risk" value={atRiskAll.length} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -164,15 +167,11 @@ export default async function AdminDashboardPage() {
         <Card title="Onboarding stage funnel">
           <BarList items={stageFunnel} />
         </Card>
-
-        <Card title="Status breakdown">
-          <BarList items={statusBreakdown} />
-        </Card>
-
-        <Card title="Department rollup">
-          <BarList items={departmentRollup} />
-        </Card>
       </div>
+
+      <Card title="Department rollup">
+        <BarList items={departmentRollup} />
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -281,6 +280,12 @@ export default async function AdminDashboardPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-2 border-t border-slate-200 pt-6">
+        <Card title="Status breakdown">
+          <StackedBar items={statusBreakdown} />
+        </Card>
       </div>
     </div>
   );
