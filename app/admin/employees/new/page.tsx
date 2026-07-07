@@ -3,21 +3,18 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import Spinner from "@/components/Spinner";
+import BackButton from "@/components/BackButton";
 import { DEPARTMENTS } from "@/lib/departments";
 
 const FIELD_CLASS =
   "h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export default function NewEmployeePage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [department, setDepartment] = useState("");
   const [birthdate, setBirthdate] = useState("");
-  const [onboardingStartDate, setOnboardingStartDate] = useState(today());
+  const [onboardingStartDate, setOnboardingStartDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ email: string; tempPassword: string } | null>(null);
@@ -76,7 +73,10 @@ export default function NewEmployeePage() {
 
   return (
     <div className="mx-auto max-w-md">
-      <h1 className="mb-1 text-xl font-semibold text-slate-900">New employee</h1>
+      <div className="mb-1 flex items-start gap-2">
+        <BackButton />
+        <h1 className="text-xl font-semibold text-slate-900">New employee</h1>
+      </div>
       <p className="mb-6 text-sm text-slate-500">
         Creates their login. A temporary password is generated for you to share.
       </p>

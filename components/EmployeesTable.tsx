@@ -164,7 +164,7 @@ export default function EmployeesTable({
 
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(DEFAULT_COLUMN_ORDER);
   const [sortColumn, setSortColumn] = useState<ColumnId>(
-    initialQuery?.sort && isColumnId(initialQuery.sort) ? initialQuery.sort : "name"
+    initialQuery?.sort && isColumnId(initialQuery.sort) ? initialQuery.sort : "progress"
   );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
     initialQuery?.dir === "desc" ? "desc" : "asc"
@@ -209,7 +209,7 @@ export default function EmployeesTable({
     if (merged.statusFilter !== "all") params.set("status", merged.statusFilter);
     if (merged.roleFilter !== "all") params.set("role", merged.roleFilter);
     if (merged.processFilter !== "all") params.set("process", merged.processFilter);
-    if (merged.sortColumn !== "name") params.set("sort", merged.sortColumn);
+    if (merged.sortColumn !== "progress") params.set("sort", merged.sortColumn);
     if (merged.sortDirection !== "asc") params.set("dir", merged.sortDirection);
 
     const qs = params.toString();
