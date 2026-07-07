@@ -8,16 +8,19 @@ export default function VerticalBarChart({ items }: { items: VerticalBarItem[] }
     <div className="flex h-48 items-end gap-4">
       {items.map((item) => (
         <div key={item.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-          <span className="text-sm font-medium text-slate-900">{item.value}</span>
           <div className="flex w-full flex-1 items-end">
             <div
-              className="w-full rounded-t-md"
+              className="relative w-full rounded-t-md"
               style={{
                 height: `${(item.value / max) * 100}%`,
-                minHeight: item.value > 0 ? "4px" : 0,
+                minHeight: item.value > 0 ? "20px" : 0,
                 backgroundColor: item.color ?? "#4f46e5",
               }}
-            />
+            >
+              <span className="absolute inset-x-0 bottom-1 text-center text-sm font-medium text-white">
+                {item.value}
+              </span>
+            </div>
           </div>
           <span className="text-center text-xs text-slate-500" title={item.label}>
             {item.label}
