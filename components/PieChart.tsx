@@ -16,7 +16,7 @@ export default function PieChart({ segments }: { segments: Segment[] }) {
   return (
     <div className="flex items-center gap-8">
       <div
-        className="h-36 w-36 shrink-0 rounded-full"
+        className="h-48 w-48 shrink-0 rounded-full"
         style={{ background: total === 0 ? "#e2e8f0" : `conic-gradient(${stops})` }}
       />
       <ul className="flex flex-col gap-2 text-sm">

@@ -24,7 +24,7 @@ export default function StackedBar({ items }: { items: StackedBarItem[] }) {
           <li key={item.label} className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
             <span className="truncate text-slate-600">{item.label}</span>
-            <span className="ml-auto shrink-0 font-medium text-slate-900">{item.value}</span>
+            <span className="shrink-0 font-medium text-slate-900">{item.value}</span>
           </li>
         ))}
       </ul>

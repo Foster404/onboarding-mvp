@@ -44,3 +44,8 @@ export function daysUntil(dateStr: string): number {
   target.setUTCHours(0, 0, 0, 0);
   return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
+
+// Whole days elapsed since this date (negative if it's in the future).
+export function daysSince(dateStr: string): number {
+  return -daysUntil(dateStr);
+}

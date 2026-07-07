@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeStageProgress, currentStage, fetchAllCompletedProgress, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
-import { daysUntil, daysUntilNextBirthday, formatDate, formatDayMonth } from "@/lib/dates";
+import { daysSince, daysUntilNextBirthday, formatDate, formatDayMonth } from "@/lib/dates";
 import { STATUS_LABELS } from "@/lib/employee-status";
 import type { EmployeeStatus } from "@/types/database";
 import PieChart from "@/components/PieChart";
@@ -16,7 +16,15 @@ const STATUS_COLORS: Record<EmployeeStatus, string> = {
   resigned: "#94a3b8",
 };
 
-const AT_RISK_WINDOW_DAYS = 14;
+// Days since probation start by which each stage is expected to be done.
+// Past the deadline with the stage still incomplete counts as overdue.
+const STAGE_DEADLINE_DAYS: Record<string, number> = {
+  week_1: 10,
+  "30_days": 30,
+  "60_days": 60,
+  "90_days": 90,
+};
+
 const BIRTHDAY_WINDOW_DAYS = 7;
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
@@ -62,7 +70,7 @@ export default async function AdminDashboardPage() {
     const stageProgress = computeStageProgress(stageList, completedIds);
     const current = currentStage(stageProgress);
     const percent = overallPercent(stageProgress);
-    return { employee, percent, currentStageTitle: current?.stage.title ?? "—" };
+    return { employee, percent, currentStageTitle: current?.stage.title ?? "—", stageProgress };
   });
 
   const finished = employeeProgress.filter((e) => e.percent === 100);
@@ -121,14 +129,31 @@ export default async function AdminDashboardPage() {
     }))
     .sort((a, b) => b.value - a.value);
 
-  // At risk: probation ends within two weeks (or already has) but the
-  // employee hasn't finished onboarding yet. Resigned employees are excluded
-  // - their probation clock no longer matters once they've left.
+  // At risk: for each employee still onboarding, find the earliest stage
+  // that has passed its expected deadline (days since probation start)
+  // while still incomplete - e.g. more than 10 days in and Week 1 isn't
+  // done, or more than 30 days in and 30 Days isn't done. Resigned
+  // employees are excluded since they're no longer on the clock.
   const atRiskAll = employeeProgress
     .filter((e) => e.percent < 100 && e.employee.status !== "resigned")
-    .map((e) => ({ ...e, daysLeft: daysUntil(e.employee.probation_end_date) }))
-    .filter((e) => e.daysLeft <= AT_RISK_WINDOW_DAYS)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
+    .map((e) => {
+      const elapsed = daysSince(e.employee.onboarding_start_date);
+      const overdueStage = e.stageProgress.find(
+        (sp) =>
+          STAGE_DEADLINE_DAYS[sp.stage.key] !== undefined &&
+          sp.percent < 100 &&
+          elapsed > STAGE_DEADLINE_DAYS[sp.stage.key]
+      );
+      if (!overdueStage) return null;
+      return {
+        employee: e.employee,
+        percent: e.percent,
+        stageTitle: overdueStage.stage.title,
+        daysOverdue: elapsed - STAGE_DEADLINE_DAYS[overdueStage.stage.key],
+      };
+    })
+    .filter((e): e is NonNullable<typeof e> => e !== null)
+    .sort((a, b) => b.daysOverdue - a.daysOverdue);
   const atRisk = atRiskAll.slice(0, 10);
 
   // Upcoming birthdays across the whole company.
@@ -150,15 +175,15 @@ export default async function AdminDashboardPage() {
         <StatCard label="Total employees" value={allProfiles.length} />
         <StatCard label="Active onboarding" value={active.length} />
         <StatCard label="Finished onboarding" value={finished.length} />
-        <StatCard label="At risk" value={atRiskAll.length} />
+        <StatCard label="Overdue" value={atRiskAll.length} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card title="Company composition">
           <PieChart
             segments={[
-              { label: "Finished onboarding", value: finished.length, color: "#4f46e5" },
               { label: "Active onboarding", value: active.length, color: "#a78bfa" },
+              { label: "Finished onboarding", value: finished.length, color: "#4f46e5" },
               { label: "Admins", value: admins.length, color: "#cbd5e1" },
             ]}
           />
@@ -167,30 +192,28 @@ export default async function AdminDashboardPage() {
         <Card title="Onboarding stage funnel">
           <BarList items={stageFunnel} />
         </Card>
-      </div>
 
-      <Card title="Department rollup">
-        <BarList items={departmentRollup} />
-      </Card>
+        <Card title="Department rollup">
+          <BarList items={departmentRollup} />
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="text-base font-semibold text-slate-900">At risk</h2>
-            <p className="text-xs text-slate-400">
-              Probation ends within {AT_RISK_WINDOW_DAYS} days, onboarding not finished
-            </p>
+            <h2 className="text-base font-semibold text-slate-900">Overdue</h2>
+            <p className="text-xs text-slate-400">Past a stage&apos;s expected deadline, still incomplete</p>
           </div>
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
               <tr>
                 <th className="px-4 py-2.5 font-medium">Name</th>
-                <th className="px-4 py-2.5 font-medium">Probation ends</th>
+                <th className="px-4 py-2.5 font-medium">Stuck at</th>
                 <th className="px-4 py-2.5 font-medium">Process</th>
               </tr>
             </thead>
             <tbody>
-              {atRisk.map(({ employee, percent, daysLeft }) => (
+              {atRisk.map(({ employee, percent, stageTitle, daysOverdue }) => (
                 <tr key={employee.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-3">
                     <Link
@@ -201,10 +224,7 @@ export default async function AdminDashboardPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
-                    {formatDate(employee.probation_end_date)}{" "}
-                    <span className={daysLeft < 0 ? "text-red-600" : "text-amber-600"}>
-                      ({daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`})
-                    </span>
+                    {stageTitle} <span className="text-red-600">({daysOverdue}d overdue)</span>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{percent}%</td>
                 </tr>
@@ -212,7 +232,7 @@ export default async function AdminDashboardPage() {
               {atRisk.length === 0 && (
                 <tr>
                   <td colSpan={3} className="px-4 py-6 text-center text-slate-400">
-                    Nobody at risk right now.
+                    Nobody overdue right now.
                   </td>
                 </tr>
               )}
