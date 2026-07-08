@@ -45,6 +45,7 @@ export type StageMedia = {
   type: MediaType;
   title: string;
   url: string;
+  sort_order: number;
   created_at: string;
 };
 

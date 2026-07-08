@@ -13,7 +13,8 @@ export default async function MyOnboardingPage() {
     .from("stages")
     .select("*, checklist_items(*), stage_media(*)")
     .order("sort_order", { ascending: true })
-    .order("sort_order", { referencedTable: "checklist_items", ascending: true });
+    .order("sort_order", { referencedTable: "checklist_items", ascending: true })
+    .order("sort_order", { referencedTable: "stage_media", ascending: true });
 
   const { data: progress } = await supabase
     .from("employee_progress")

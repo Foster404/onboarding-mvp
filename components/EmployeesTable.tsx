@@ -152,6 +152,31 @@ function renderCell(row: EmployeeRow, col: ColumnId) {
   }
 }
 
+function escapeCsvField(value: string) {
+  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+function cellText(row: EmployeeRow, col: ColumnId): string {
+  switch (col) {
+    case "name":
+      return row.role === "admin" ? `${row.fullName} (Admin)` : row.fullName;
+    case "department":
+      return row.department ?? "—";
+    case "birthdate":
+      return row.birthdate ? formatDate(row.birthdate) : "—";
+    case "probationStart":
+      return formatDate(row.onboardingStartDate);
+    case "probationEnd":
+      return formatDate(row.probationEndDate);
+    case "status":
+      return STATUS_LABELS[row.status];
+    case "currentStage":
+      return row.percent === 100 ? "Finished" : row.currentStageTitle;
+    case "progress":
+      return `${row.percent}%`;
+  }
+}
+
 export default function EmployeesTable({
   rows,
   initialQuery,
@@ -275,6 +300,25 @@ export default function EmployeesTable({
     });
   }
 
+  function downloadCsv() {
+    const header = columnOrder.map((col) => escapeCsvField(COLUMN_LABEL_LINES[col].join(" ")));
+    const lines = [header.join(",")];
+    for (const row of visibleRows) {
+      lines.push(columnOrder.map((col) => escapeCsvField(cellText(row, col))).join(","));
+    }
+    // Leading BOM so Excel opens the UTF-8 file (e.g. em dashes) without mangling it.
+    const csv = "﻿" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function clearFilters() {
     setSearch("");
     setDepartmentFilter("all");
@@ -364,6 +408,13 @@ export default function EmployeesTable({
           className="rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
         >
           Clear filters
+        </button>
+        <button
+          type="button"
+          onClick={downloadCsv}
+          className="ml-auto rounded-md border border-slate-300 px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Download CSV
         </button>
       </div>
 

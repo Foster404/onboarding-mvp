@@ -8,6 +8,7 @@ import {
   addStageMedia,
   deleteChecklistItem,
   deleteStageMedia,
+  reorderStageMedia,
   updateChecklistItem,
   updateStageMediaTitle,
   updateStageTitle,
@@ -83,7 +84,40 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const mediaList = dragOrder
+    ? (dragOrder.map((id) => stage.stage_media.find((m) => m.id === id)).filter(Boolean) as StageMedia[])
+    : stage.stage_media;
+
+  function handleDragStart(id: string) {
+    setDraggingId(id);
+    setDragOrder(stage.stage_media.map((m) => m.id));
+  }
+
+  function handleDragOver(overId: string) {
+    if (!draggingId || draggingId === overId) return;
+    setDragOrder((prev) => {
+      const list = prev ?? stage.stage_media.map((m) => m.id);
+      const fromIdx = list.indexOf(draggingId);
+      const toIdx = list.indexOf(overId);
+      if (fromIdx === -1 || toIdx === -1) return list;
+      const next = [...list];
+      next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, draggingId);
+      return next;
+    });
+  }
+
+  function handleDragEnd() {
+    if (draggingId && dragOrder) {
+      run("reorder-media", () => reorderStageMedia(stage.id, dragOrder));
+    }
+    setDraggingId(null);
+    setDragOrder(null);
+  }
 
   function selectSourceMode(mode: "link" | "file") {
     setSourceMode(mode);
@@ -230,9 +264,28 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
       <div className="border-t border-slate-100 pt-4">
         <h4 className="mb-2 text-sm font-medium text-slate-700">Videos &amp; files</h4>
         <ul className="mb-3 flex flex-col gap-2">
-          {stage.stage_media.map((m) => (
-            <li key={m.id} className="flex items-center justify-between gap-2 text-sm">
+          {mediaList.map((m) => (
+            <li
+              key={m.id}
+              draggable={renamingId !== m.id}
+              onDragStart={() => handleDragStart(m.id)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                handleDragOver(m.id);
+              }}
+              onDrop={(e) => e.preventDefault()}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center justify-between gap-2 text-sm ${
+                draggingId === m.id ? "opacity-40" : ""
+              }`}
+            >
               <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="shrink-0 cursor-grab select-none text-slate-300 hover:text-slate-500"
+                  title="Drag to reorder"
+                >
+                  ⠿
+                </span>
                 <span className="shrink-0 text-xs text-slate-400">
                   {isUploadedFileUrl(m.url) ? (m.type === "video" ? "Video" : "File") : "Link"}
                 </span>

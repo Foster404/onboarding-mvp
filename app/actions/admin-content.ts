@@ -53,7 +53,17 @@ export async function deleteChecklistItem(itemId: string) {
 
 export async function addStageMedia(stageId: string, type: MediaType, title: string, url: string) {
   const supabase = await assertAdmin();
-  const { error } = await supabase.from("stage_media").insert({ stage_id: stageId, type, title, url });
+  const { data: last } = await supabase
+    .from("stage_media")
+    .select("sort_order")
+    .eq("stage_id", stageId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextSortOrder = (last?.sort_order ?? 0) + 1;
+  const { error } = await supabase
+    .from("stage_media")
+    .insert({ stage_id: stageId, type, title, url, sort_order: nextSortOrder });
   if (error) throw new Error(error.message);
   revalidatePath("/admin/content");
   revalidatePath("/");
@@ -63,6 +73,21 @@ export async function updateStageMediaTitle(mediaId: string, title: string) {
   const supabase = await assertAdmin();
   const { error } = await supabase.from("stage_media").update({ title }).eq("id", mediaId);
   if (error) throw new Error(error.message);
+  revalidatePath("/admin/content");
+  revalidatePath("/");
+}
+
+// `orderedIds` is the full media list for the stage in its new order; each
+// row's sort_order is rewritten to its 1-based position.
+export async function reorderStageMedia(stageId: string, orderedIds: string[]) {
+  const supabase = await assertAdmin();
+  const results = await Promise.all(
+    orderedIds.map((id, index) =>
+      supabase.from("stage_media").update({ sort_order: index + 1 }).eq("id", id).eq("stage_id", stageId)
+    )
+  );
+  const failed = results.find((r) => r.error);
+  if (failed?.error) throw new Error(failed.error.message);
   revalidatePath("/admin/content");
   revalidatePath("/");
 }
