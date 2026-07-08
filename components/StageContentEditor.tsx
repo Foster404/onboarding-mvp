@@ -32,6 +32,44 @@ function isUploadedFileUrl(url: string) {
   return url.includes("/storage/v1/object/public/media/");
 }
 
+// Supabase Storage rejects object keys with spaces or characters like
+// [ ] outside a small safe set, so strip anything that isn't - the
+// original file name is still kept as the media's title.
+function sanitizeFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-");
+}
+
+function deriveFallbackTitle(url: string) {
+  try {
+    const parsed = new URL(url);
+    const last = parsed.pathname.split("/").filter(Boolean).pop();
+    return last ? decodeURIComponent(last) : parsed.hostname;
+  } catch {
+    return url;
+  }
+}
+
+async function fetchYoutubeTitle(url: string): Promise<string | undefined> {
+  if (!/youtube\.com|youtu\.be/i.test(url)) return undefined;
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if (!res.ok) return undefined;
+    const data = await res.json();
+    return typeof data?.title === "string" ? data.title : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+type PendingFile = {
+  id: string;
+  file: File;
+  title: string;
+  url?: string;
+  uploading: boolean;
+  error?: string;
+};
+
 export default function StageContentEditor({ stage }: { stage: StageWithContent }) {
   const router = useRouter();
   const [title, setTitle] = useState(stage.title);
@@ -39,25 +77,15 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   const [newMediaTitle, setNewMediaTitle] = useState("");
   const [sourceMode, setSourceMode] = useState<"link" | "file">("link");
   const [newMediaUrl, setNewMediaUrl] = useState("");
-  const [uploadedMime, setUploadedMime] = useState<string | undefined>(undefined);
-  const [chosenFileName, setChosenFileName] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function selectSourceMode(mode: "link" | "file") {
     setSourceMode(mode);
-    setNewMediaUrl("");
-    setUploadedMime(undefined);
-    setChosenFileName(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  function resetMediaForm() {
     setNewMediaTitle("");
     setNewMediaUrl("");
-    setUploadedMime(undefined);
-    setChosenFileName(null);
+    setPendingFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -71,29 +99,58 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
     }
   }
 
-  async function handleUploadFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleUrlBlur() {
+    const url = newMediaUrl.trim();
+    if (!url || newMediaTitle.trim()) return;
+    const title = await fetchYoutubeTitle(url);
+    if (title) setNewMediaTitle(title);
+  }
 
-    setChosenFileName(file.name);
-    setUploading(true);
+  // Files can be picked several at a time; each uploads independently and
+  // shows up as its own editable row before the admin confirms "Add media".
+  async function handleChooseFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+
+    const entries: PendingFile[] = files.map((file) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      file,
+      title: file.name,
+      uploading: true,
+    }));
+    setPendingFiles((prev) => [...prev, ...entries]);
+
     const supabase = createClient();
-    const path = `${stage.id}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-    setUploading(false);
+    await Promise.all(
+      entries.map(async (entry) => {
+        const path = `${stage.id}/${entry.id}-${sanitizeFileName(entry.file.name)}`;
+        const { error } = await supabase.storage.from("media").upload(path, entry.file, { upsert: true });
+        if (error) {
+          setPendingFiles((prev) =>
+            prev.map((pf) => (pf.id === entry.id ? { ...pf, uploading: false, error: error.message } : pf))
+          );
+          return;
+        }
+        const { data } = supabase.storage.from("media").getPublicUrl(path);
+        setPendingFiles((prev) =>
+          prev.map((pf) => (pf.id === entry.id ? { ...pf, uploading: false, url: data.publicUrl } : pf))
+        );
+      })
+    );
+  }
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+  function updatePendingTitle(id: string, value: string) {
+    setPendingFiles((prev) => prev.map((pf) => (pf.id === id ? { ...pf, title: value } : pf)));
+  }
 
-    const { data } = supabase.storage.from("media").getPublicUrl(path);
-    setNewMediaUrl(data.publicUrl);
-    setUploadedMime(file.type);
-    if (!newMediaTitle) setNewMediaTitle(file.name);
+  function removePendingFile(id: string) {
+    setPendingFiles((prev) => prev.filter((pf) => pf.id !== id));
   }
 
   const busy = busyKey !== null;
+  const pendingReady = pendingFiles.filter((pf) => pf.url && !pf.uploading);
+  const canAddMedia =
+    sourceMode === "link" ? newMediaUrl.trim().length > 0 : pendingReady.length > 0;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -182,13 +239,6 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
         </ul>
 
         <div className="flex flex-col gap-2 rounded-md bg-slate-50 p-3">
-          <input
-            value={newMediaTitle}
-            onChange={(e) => setNewMediaTitle(e.target.value)}
-            placeholder="Title*"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-          />
-
           <div className="flex gap-1.5">
             <button
               type="button"
@@ -215,49 +265,95 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
           </div>
 
           {sourceMode === "link" ? (
-            <input
-              value={newMediaUrl}
-              onChange={(e) => setNewMediaUrl(e.target.value)}
-              placeholder="e.g. https://youtube.com/watch?v=... or another link"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-            />
-          ) : (
-            <div className="flex items-center gap-2">
+            <>
               <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleUploadFile}
-                disabled={uploading}
-                className="hidden"
+                value={newMediaUrl}
+                onChange={(e) => setNewMediaUrl(e.target.value)}
+                onBlur={handleUrlBlur}
+                placeholder="e.g. https://youtube.com/watch?v=... or another link"
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
-              >
-                Choose file
-              </button>
-              {uploading && (
-                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-                  <Spinner className="h-3 w-3" /> uploading...
-                </span>
+              <input
+                value={newMediaTitle}
+                onChange={(e) => setNewMediaTitle(e.target.value)}
+                placeholder="Title (auto-filled once you add the link - editable)"
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+              />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleChooseFiles}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100"
+                >
+                  Choose file(s)
+                </button>
+                <span className="text-xs text-slate-400">You can select more than one</span>
+              </div>
+
+              {pendingFiles.length > 0 && (
+                <ul className="flex flex-col gap-1.5">
+                  {pendingFiles.map((pf) => (
+                    <li key={pf.id} className="flex items-center gap-2">
+                      <input
+                        value={pf.title}
+                        onChange={(e) => updatePendingTitle(pf.id, e.target.value)}
+                        placeholder="Title (editable)"
+                        className="flex-1 rounded-md border border-slate-300 px-2 py-1 text-xs"
+                      />
+                      {pf.uploading && (
+                        <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                          <Spinner className="h-3 w-3" /> uploading...
+                        </span>
+                      )}
+                      {pf.error && <span className="text-xs text-red-600">{pf.error}</span>}
+                      <button
+                        type="button"
+                        onClick={() => removePendingFile(pf.id)}
+                        className="shrink-0 text-xs text-red-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
-              {!uploading && chosenFileName && (
-                <span className="truncate text-xs text-slate-500">{chosenFileName}</span>
-              )}
-            </div>
+            </>
           )}
 
           <div className="flex justify-end">
             <button
               type="button"
-              disabled={busy || !newMediaTitle.trim() || !newMediaUrl.trim()}
+              disabled={busy || !canAddMedia}
               onClick={() =>
                 run("add-media", async () => {
-                  const type = inferMediaType(newMediaUrl.trim(), uploadedMime);
-                  await addStageMedia(stage.id, type, newMediaTitle.trim(), newMediaUrl.trim());
-                  resetMediaForm();
+                  if (sourceMode === "link") {
+                    const url = newMediaUrl.trim();
+                    const mediaTitle = newMediaTitle.trim() || deriveFallbackTitle(url);
+                    await addStageMedia(stage.id, inferMediaType(url), mediaTitle, url);
+                    setNewMediaTitle("");
+                    setNewMediaUrl("");
+                  } else {
+                    for (const pf of pendingReady) {
+                      await addStageMedia(
+                        stage.id,
+                        inferMediaType(pf.url!, pf.file.type),
+                        pf.title.trim() || pf.file.name,
+                        pf.url!
+                      );
+                    }
+                    setPendingFiles((prev) => prev.filter((pf) => !pf.url || pf.uploading));
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }
                 })
               }
               className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
