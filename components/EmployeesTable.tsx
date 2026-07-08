@@ -171,8 +171,8 @@ export default function EmployeesTable({
   );
   const [search, setSearch] = useState(initialQuery?.q ?? "");
   const [departmentFilter, setDepartmentFilter] = useState(initialQuery?.dept ?? "all");
-  const [statusFilter, setStatusFilter] = useState<"all" | EmployeeStatus>(
-    (initialQuery?.status as EmployeeStatus | undefined) ?? "all"
+  const [statusFilter, setStatusFilter] = useState<"all" | "not_resigned" | EmployeeStatus>(
+    (initialQuery?.status as EmployeeStatus | "not_resigned" | undefined) ?? "all"
   );
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>(
     (initialQuery?.role as UserRole | undefined) ?? "all"
@@ -230,7 +230,9 @@ export default function EmployeesTable({
         r.fullName.toLowerCase().includes(query) ||
         (r.department ?? "").toLowerCase().includes(query);
       const matchesDept = departmentFilter === "all" || r.department === departmentFilter;
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "not_resigned" ? r.status !== "resigned" : r.status === statusFilter);
       const matchesRole = roleFilter === "all" || r.role === roleFilter;
       const matchesProcess =
         processFilter === "all" ||
@@ -319,12 +321,13 @@ export default function EmployeesTable({
         <select
           value={statusFilter}
           onChange={(e) => {
-            setStatusFilter(e.target.value as "all" | EmployeeStatus);
+            setStatusFilter(e.target.value as "all" | "not_resigned" | EmployeeStatus);
             syncUrl({ statusFilter: e.target.value });
           }}
           className="rounded-md border border-slate-300 px-2.5 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
         >
           <option value="all">All statuses</option>
+          <option value="not_resigned">All except resigned</option>
           {STATUS_OPTIONS.map(([value, label]) => (
             <option key={value} value={value}>
               {label}
@@ -363,6 +366,10 @@ export default function EmployeesTable({
           Clear filters
         </button>
       </div>
+
+      <p className="mb-2 text-sm text-slate-500">
+        Showing {visibleRows.length} {visibleRows.length === 1 ? "employee" : "employees"}
+      </p>
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full table-fixed text-left text-sm">

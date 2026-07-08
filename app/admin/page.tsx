@@ -77,6 +77,13 @@ export default async function AdminDashboardPage() {
   const finished = employeeProgress.filter((e) => e.percent === 100);
   const active = employeeProgress.filter((e) => e.percent < 100);
 
+  // Stat cards up top should reflect people actually on the roster, not
+  // employees who have since resigned.
+  const nonResignedProfiles = allProfiles.filter((p) => p.status !== "resigned");
+  const nonResignedProgress = employeeProgress.filter((e) => e.employee.status !== "resigned");
+  const activeNonResigned = nonResignedProgress.filter((e) => e.percent < 100);
+  const finishedNonResigned = nonResignedProgress.filter((e) => e.percent === 100);
+
   const percentByEmployeeId = new Map(employeeProgress.map((e) => [e.employee.id, e.percent]));
 
   const lastStarted = [...employees]
@@ -181,9 +188,9 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Total employees" value={allProfiles.length} />
-        <StatCard label="Active onboarding" value={active.length} />
-        <StatCard label="Finished onboarding" value={finished.length} />
+        <StatCard label="Total employees" value={nonResignedProfiles.length} />
+        <StatCard label="Active onboarding" value={activeNonResigned.length} />
+        <StatCard label="Finished onboarding" value={finishedNonResigned.length} />
         <StatCard label="Overdue" value={atRiskAll.length} />
       </div>
 
