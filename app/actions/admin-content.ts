@@ -59,6 +59,14 @@ export async function addStageMedia(stageId: string, type: MediaType, title: str
   revalidatePath("/");
 }
 
+export async function updateStageMediaTitle(mediaId: string, title: string) {
+  const supabase = await assertAdmin();
+  const { error } = await supabase.from("stage_media").update({ title }).eq("id", mediaId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/content");
+  revalidatePath("/");
+}
+
 export async function deleteStageMedia(mediaId: string) {
   const supabase = await assertAdmin();
   const { error } = await supabase.from("stage_media").delete().eq("id", mediaId);

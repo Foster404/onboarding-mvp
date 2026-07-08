@@ -9,6 +9,7 @@ import {
   deleteChecklistItem,
   deleteStageMedia,
   updateChecklistItem,
+  updateStageMediaTitle,
   updateStageTitle,
 } from "@/app/actions/admin-content";
 import type { ChecklistItem, MediaType, Stage, StageMedia } from "@/types/database";
@@ -78,6 +79,9 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   const [sourceMode, setSourceMode] = useState<"link" | "file">("link");
   const [newMediaUrl, setNewMediaUrl] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [duplicateFileNames, setDuplicateFileNames] = useState<string[]>([]);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,7 +90,13 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
     setNewMediaTitle("");
     setNewMediaUrl("");
     setPendingFiles([]);
+    setDuplicateFileNames([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function startRename(m: StageMedia) {
+    setRenamingId(m.id);
+    setRenameValue(m.title);
   }
 
   async function run(key: string, fn: () => Promise<void>) {
@@ -109,7 +119,17 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   // Files can be picked several at a time; each uploads independently and
   // shows up as its own editable row before the admin confirms "Add media".
   async function handleChooseFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length === 0) return;
+
+    const existingFileNames = new Set(
+      stage.stage_media.filter((m) => isUploadedFileUrl(m.url)).map((m) => m.title)
+    );
+    const pendingNames = new Set(pendingFiles.map((pf) => pf.file.name));
+    const files = picked.filter((f) => !existingFileNames.has(f.name) && !pendingNames.has(f.name));
+    const duplicates = picked.filter((f) => existingFileNames.has(f.name) || pendingNames.has(f.name));
+    setDuplicateFileNames(duplicates.map((f) => f.name));
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (files.length === 0) return;
 
     const entries: PendingFile[] = files.map((file) => ({
@@ -149,8 +169,13 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
 
   const busy = busyKey !== null;
   const pendingReady = pendingFiles.filter((pf) => pf.url && !pf.uploading);
+  const normalizedNewUrl = newMediaUrl.trim();
+  const isDuplicateLink =
+    normalizedNewUrl.length > 0 && stage.stage_media.some((m) => m.url === normalizedNewUrl);
   const canAddMedia =
-    sourceMode === "link" ? newMediaUrl.trim().length > 0 : pendingReady.length > 0;
+    sourceMode === "link"
+      ? normalizedNewUrl.length > 0 && !isDuplicateLink
+      : pendingReady.length > 0;
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -207,29 +232,77 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
         <ul className="mb-3 flex flex-col gap-2">
           {stage.stage_media.map((m) => (
             <li key={m.id} className="flex items-center justify-between gap-2 text-sm">
-              <a
-                href={m.url}
-                target="_blank"
-                rel="noreferrer"
-                title={m.url}
-                className="truncate text-indigo-600 hover:underline"
-                {...(isUploadedFileUrl(m.url) ? { download: true } : {})}
-              >
-                {m.title}
-              </a>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="text-xs text-slate-400">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 text-xs text-slate-400">
                   {isUploadedFileUrl(m.url) ? (m.type === "video" ? "Video" : "File") : "Link"}
                 </span>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => run(`remove-media-${m.id}`, () => deleteStageMedia(m.id))}
-                  className="flex items-center gap-1.5 text-red-600 hover:underline disabled:opacity-50"
-                >
-                  {busyKey === `remove-media-${m.id}` && <Spinner className="h-3.5 w-3.5" />}
-                  Remove
-                </button>
+                {renamingId === m.id ? (
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm"
+                  />
+                ) : (
+                  <a
+                    href={m.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={m.url}
+                    className="truncate text-indigo-600 hover:underline"
+                    {...(isUploadedFileUrl(m.url) ? { download: true } : {})}
+                  >
+                    {m.title}
+                  </a>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {renamingId === m.id ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={busy || !renameValue.trim()}
+                      onClick={() =>
+                        run(`rename-media-${m.id}`, async () => {
+                          await updateStageMediaTitle(m.id, renameValue.trim());
+                          setRenamingId(null);
+                        })
+                      }
+                      className="flex items-center gap-1.5 text-indigo-600 hover:underline disabled:opacity-50"
+                    >
+                      {busyKey === `rename-media-${m.id}` && <Spinner className="h-3.5 w-3.5" />}
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setRenamingId(null)}
+                      className="text-slate-500 hover:underline disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => startRename(m)}
+                      className="text-slate-600 hover:underline disabled:opacity-50"
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => run(`remove-media-${m.id}`, () => deleteStageMedia(m.id))}
+                      className="flex items-center gap-1.5 text-red-600 hover:underline disabled:opacity-50"
+                    >
+                      {busyKey === `remove-media-${m.id}` && <Spinner className="h-3.5 w-3.5" />}
+                      Remove
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           ))}
@@ -273,6 +346,9 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                 placeholder="e.g. https://youtube.com/watch?v=... or another link"
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
+              {isDuplicateLink && (
+                <p className="text-xs text-red-600">This link has already been added.</p>
+              )}
               <input
                 value={newMediaTitle}
                 onChange={(e) => setNewMediaTitle(e.target.value)}
@@ -299,6 +375,12 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                 </button>
                 <span className="text-xs text-slate-400">You can select more than one</span>
               </div>
+
+              {duplicateFileNames.length > 0 && (
+                <p className="text-xs text-red-600">
+                  Already added, skipped: {duplicateFileNames.join(", ")}
+                </p>
+              )}
 
               {pendingFiles.length > 0 && (
                 <ul className="flex flex-col gap-1.5">
@@ -352,6 +434,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                       );
                     }
                     setPendingFiles((prev) => prev.filter((pf) => !pf.url || pf.uploading));
+                    setDuplicateFileNames([]);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }
                 })
