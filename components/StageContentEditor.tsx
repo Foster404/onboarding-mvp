@@ -77,6 +77,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   const [title, setTitle] = useState(stage.title);
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newMediaTitle, setNewMediaTitle] = useState("");
+  const [titleAutoFilled, setTitleAutoFilled] = useState(false);
   const [sourceMode, setSourceMode] = useState<"link" | "file">("link");
   const [newMediaUrl, setNewMediaUrl] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -122,6 +123,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   function selectSourceMode(mode: "link" | "file") {
     setSourceMode(mode);
     setNewMediaTitle("");
+    setTitleAutoFilled(false);
     setNewMediaUrl("");
     setPendingFiles([]);
     setDuplicateFileNames([]);
@@ -145,9 +147,12 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
 
   async function handleUrlBlur() {
     const url = newMediaUrl.trim();
-    if (!url || newMediaTitle.trim()) return;
+    if (!url || (newMediaTitle.trim() && !titleAutoFilled)) return;
     const title = await fetchYoutubeTitle(url);
-    if (title) setNewMediaTitle(title);
+    if (title) {
+      setNewMediaTitle(title);
+      setTitleAutoFilled(true);
+    }
   }
 
   // Files can be picked several at a time; each uploads independently and
@@ -404,7 +409,10 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
               )}
               <input
                 value={newMediaTitle}
-                onChange={(e) => setNewMediaTitle(e.target.value)}
+                onChange={(e) => {
+                  setNewMediaTitle(e.target.value);
+                  setTitleAutoFilled(false);
+                }}
                 placeholder="Title (auto-filled once you add the link - editable)"
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
               />
@@ -476,6 +484,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                     const mediaTitle = newMediaTitle.trim() || deriveFallbackTitle(url);
                     await addStageMedia(stage.id, inferMediaType(url), mediaTitle, url);
                     setNewMediaTitle("");
+                    setTitleAutoFilled(false);
                     setNewMediaUrl("");
                   } else {
                     for (const pf of pendingReady) {
