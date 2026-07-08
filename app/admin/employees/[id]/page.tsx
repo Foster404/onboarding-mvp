@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/current-user";
 import { computeStageProgress, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
 import { formatDate } from "@/lib/dates";
@@ -14,6 +15,8 @@ export default async function EmployeeDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const current = await getCurrentUser();
+  if (!current) redirect("/login");
 
   const [{ data: profile }, { data: stages }, { data: progress }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", id).single(),
@@ -44,7 +47,7 @@ export default async function EmployeeDetailPage({
         </div>
       </div>
 
-      <EmployeeEditForm profile={profile} />
+      <EmployeeEditForm profile={profile} currentUserId={current.userId} />
 
       <EmployeeStageStatus
         profileId={profile.id}

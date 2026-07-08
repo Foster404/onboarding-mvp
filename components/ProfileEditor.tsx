@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/database";
 import { formatDate } from "@/lib/dates";
 import Spinner from "@/components/Spinner";
+import Avatar from "@/components/Avatar";
+import PhotoCropModal from "@/components/PhotoCropModal";
 
 export default function ProfileEditor({
   profile,
@@ -24,20 +26,29 @@ export default function ProfileEditor({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
 
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => setRawImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleCropConfirm(blob: Blob) {
+    setRawImageSrc(null);
     setUploading(true);
     setError(null);
 
     const supabase = createClient();
-    const ext = file.name.split(".").pop();
-    const path = `${userId}/avatar-${Date.now()}.${ext}`;
+    const path = `${userId}/avatar-${Date.now()}.jpg`;
 
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, {
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, {
       upsert: true,
+      contentType: "image/jpeg",
     });
 
     if (uploadError) {
@@ -90,10 +101,7 @@ export default function ProfileEditor({
 
       <div className="flex items-center gap-4">
         <div className="h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-          {photoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="Profile photo" className="h-full w-full object-cover" />
-          )}
+          <Avatar src={photoUrl} alt="Profile photo" />
         </div>
         <div>
           <button
@@ -110,10 +118,18 @@ export default function ProfileEditor({
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={handlePhotoChange}
+            onChange={handleFileSelected}
           />
         </div>
       </div>
+
+      {rawImageSrc && (
+        <PhotoCropModal
+          imageSrc={rawImageSrc}
+          onCancel={() => setRawImageSrc(null)}
+          onConfirm={handleCropConfirm}
+        />
+      )}
 
       <div className="flex flex-col gap-1">
         <label htmlFor="birthdate" className="text-sm font-medium text-slate-700">

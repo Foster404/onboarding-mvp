@@ -51,3 +51,22 @@ export async function resetEmployeePassword(profileId: string, newPassword: stri
   const { error } = await admin.auth.admin.updateUserById(profileId, { password: newPassword });
   if (error) throw new Error(error.message);
 }
+
+export async function deleteEmployee(profileId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: caller } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (caller?.role !== "admin") throw new Error("Admin access required");
+
+  if (user.id === profileId) throw new Error("Admins cannot delete their own account");
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(profileId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/employees");
+}

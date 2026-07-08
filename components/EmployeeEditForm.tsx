@@ -1,18 +1,28 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { updateEmployeeProfile, resetEmployeePassword } from "@/app/actions/admin-employees";
+import { useRouter } from "next/navigation";
+import { updateEmployeeProfile, resetEmployeePassword, deleteEmployee } from "@/app/actions/admin-employees";
 import { createClient } from "@/lib/supabase/client";
 import type { EmployeeStatus, Profile } from "@/types/database";
 import { DEPARTMENTS } from "@/lib/departments";
 import { STATUS_OPTIONS } from "@/lib/employee-status";
 import { PASSWORD_REQUIREMENTS_TEXT, isPasswordValid } from "@/lib/password";
 import Spinner from "@/components/Spinner";
+import Avatar from "@/components/Avatar";
+import PhotoCropModal from "@/components/PhotoCropModal";
 
 const FIELD_CLASS =
   "h-10 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none";
 
-export default function EmployeeEditForm({ profile }: { profile: Profile }) {
+export default function EmployeeEditForm({
+  profile,
+  currentUserId,
+}: {
+  profile: Profile;
+  currentUserId: string;
+}) {
+  const router = useRouter();
   const [fullName, setFullName] = useState(profile.full_name);
   const [department, setDepartment] = useState(profile.department ?? "");
   const [birthdate, setBirthdate] = useState(profile.birthdate ?? "");
@@ -23,24 +33,37 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
   const [photoUrl, setPhotoUrl] = useState(profile.photo_url);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => setRawImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleCropConfirm(blob: Blob) {
+    setRawImageSrc(null);
     setUploadingPhoto(true);
     setPhotoError(null);
 
     const supabase = createClient();
-    const ext = file.name.split(".").pop();
-    const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
+    const path = `${profile.id}/avatar-${Date.now()}.jpg`;
 
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, {
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, {
       upsert: true,
+      contentType: "image/jpeg",
     });
 
     if (uploadError) {
@@ -57,6 +80,19 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
       setPhotoUrl(data.publicUrl);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Failed to save photo");
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteEmployee(profile.id);
+      router.push("/admin/employees");
+      router.refresh();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Failed to delete user");
+      setDeleting(false);
     }
   }
 
@@ -109,10 +145,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
 
       <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
         <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-          {photoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="Profile photo" className="h-full w-full object-cover" />
-          )}
+          <Avatar src={photoUrl} alt="Profile photo" />
         </div>
         <div className="flex flex-col gap-2">
           <div>
@@ -134,12 +167,20 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handlePhotoChange}
+              onChange={handleFileSelected}
             />
             {photoError && <p className="mt-1 text-xs text-red-600">{photoError}</p>}
           </div>
         </div>
       </div>
+
+      {rawImageSrc && (
+        <PhotoCropModal
+          imageSrc={rawImageSrc}
+          onCancel={() => setRawImageSrc(null)}
+          onConfirm={handleCropConfirm}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
@@ -280,6 +321,50 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
           </div>
         )}
       </div>
+
+      {currentUserId !== profile.id && (
+        <div className="border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-sm font-medium text-red-600 hover:text-red-700"
+          >
+            Delete user
+          </button>
+          {deleteError && <p className="mt-1 text-sm text-red-600">{deleteError}</p>}
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900">Delete {profile.full_name}?</h3>
+            <p className="text-sm text-slate-500">
+              This permanently deletes their account, login, and onboarding progress. This can&apos;t be
+              undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting && <Spinner />}
+                {deleting ? "Deleting..." : "Delete user"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

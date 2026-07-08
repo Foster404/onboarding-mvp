@@ -4,8 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays } from "@/lib/dates";
 
 function generateTempPassword(): string {
-  // "A" guarantees the uppercase-letter requirement; the rest is random hex.
-  return "A" + crypto.randomUUID().replace(/-/g, "").slice(0, 11);
+  // "A1" guarantees the uppercase-letter and digit requirements; the rest is random hex.
+  return "A1" + crypto.randomUUID().replace(/-/g, "").slice(0, 10);
 }
 
 export async function POST(request: Request) {

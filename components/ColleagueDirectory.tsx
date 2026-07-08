@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { ColleagueDirectoryRow } from "@/types/database";
 import { daysUntilNextBirthday, formatDayMonth } from "@/lib/dates";
 import { STATUS_LABELS, STATUS_BADGE_CLASS } from "@/lib/employee-status";
+import Avatar from "@/components/Avatar";
 
 const BIRTHDAY_SOON_WINDOW_DAYS = 7;
 
@@ -64,10 +65,7 @@ export default function ColleagueDirectory({ colleagues }: { colleagues: Colleag
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-                    {c.photo_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.photo_url} alt={c.full_name} className="h-full w-full object-cover" />
-                    )}
+                    <Avatar src={c.photo_url} alt={c.full_name} />
                   </div>
                   <div>
                     <div className="font-medium text-slate-900">{c.full_name}</div>
