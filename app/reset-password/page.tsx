@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Spinner from "@/components/Spinner";
 import Logo from "@/components/Logo";
+import { PASSWORD_REQUIREMENTS_TEXT, isPasswordValid } from "@/lib/password";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -34,6 +35,11 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!isPasswordValid(password)) {
+      setError(PASSWORD_REQUIREMENTS_TEXT);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords don't match.");
@@ -85,6 +91,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 transition-shadow focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
               />
+              <p className="text-xs text-slate-400">{PASSWORD_REQUIREMENTS_TEXT}</p>
             </div>
 
             <div className="flex flex-col gap-1">

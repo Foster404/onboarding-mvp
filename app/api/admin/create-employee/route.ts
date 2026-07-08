@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays } from "@/lib/dates";
 
 function generateTempPassword(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+  // "A" guarantees the uppercase-letter requirement; the rest is random hex.
+  return "A" + crypto.randomUUID().replace(/-/g, "").slice(0, 11);
 }
 
 export async function POST(request: Request) {
@@ -38,6 +39,15 @@ export async function POST(request: Request) {
 
   const tempPassword = generateTempPassword();
   const admin = createAdminClient();
+
+  const { data: existing } = await admin
+    .from("profiles")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+  if (existing) {
+    return NextResponse.json({ error: "An employee with this email already exists" }, { status: 400 });
+  }
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,

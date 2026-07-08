@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isPasswordValid, PASSWORD_REQUIREMENTS_TEXT } from "@/lib/password";
 import type { EmployeeStatus } from "@/types/database";
 
 export async function updateEmployeeProfile(
@@ -15,6 +16,7 @@ export async function updateEmployeeProfile(
     vacation_days_remaining?: number;
     onboarding_start_date?: string;
     probation_end_date?: string;
+    photo_url?: string | null;
   }
 ) {
   const supabase = await createClient();
@@ -42,6 +44,8 @@ export async function resetEmployeePassword(profileId: string, newPassword: stri
 
   const { data: caller } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (caller?.role !== "admin") throw new Error("Admin access required");
+
+  if (!isPasswordValid(newPassword)) throw new Error(PASSWORD_REQUIREMENTS_TEXT);
 
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.updateUserById(profileId, { password: newPassword });
