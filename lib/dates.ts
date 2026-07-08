@@ -21,6 +21,17 @@ export function formatDayMonth(dateStr: string): string {
   return `${day}.${month}`;
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+// Month name + day, no year, e.g. "July 10". Used for recurring events like birthdays.
+export function formatMonthDay(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCDate()}`;
+}
+
 // Days from today until the next occurrence of this birthdate (0 = today,
 // wraps to next year once it's passed).
 export function daysUntilNextBirthday(birthdate: string): number {

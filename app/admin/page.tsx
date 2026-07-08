@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeStageProgress, currentStage, fetchAllCompletedProgress, overallPercent } from "@/lib/onboarding-progress";
 import type { StageWithItems } from "@/lib/onboarding-progress";
-import { daysSince, daysUntilNextBirthday, formatDate, formatDayMonth } from "@/lib/dates";
+import { daysSince, daysUntilNextBirthday, formatDate, formatMonthDay } from "@/lib/dates";
 import { STATUS_LABELS } from "@/lib/employee-status";
 import type { EmployeeStatus } from "@/types/database";
 import PieChart from "@/components/PieChart";
@@ -263,7 +263,7 @@ export default async function AdminDashboardPage() {
               <li key={profile.id} className="flex items-center justify-between px-4 py-3 text-sm">
                 <span className="font-medium text-slate-900">{profile.full_name}</span>
                 <span className="text-slate-500">
-                  {formatDayMonth(profile.birthdate!)}{" "}
+                  {formatMonthDay(profile.birthdate!)}{" "}
                   <span className="text-slate-400">{days === 0 ? "· today" : `· in ${days}d`}</span>
                 </span>
               </li>

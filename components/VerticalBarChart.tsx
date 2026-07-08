@@ -17,7 +17,7 @@ export default function VerticalBarChart({ items }: { items: VerticalBarItem[] }
                 backgroundColor: item.color ?? "#4f46e5",
               }}
             />
-            <span className="absolute inset-x-0 bottom-2.5 text-center text-sm font-medium text-white">
+            <span className="absolute inset-x-0 bottom-[2.7px] text-center text-sm font-medium text-white">
               {item.value}
             </span>
           </div>
