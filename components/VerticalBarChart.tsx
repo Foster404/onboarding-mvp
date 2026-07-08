@@ -10,16 +10,14 @@ export default function VerticalBarChart({ items }: { items: VerticalBarItem[] }
         <div key={item.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
           <div className="flex w-full flex-1 items-end">
             <div
-              className="relative w-full rounded-t-md"
+              className="relative flex w-full items-center justify-center rounded-t-md"
               style={{
                 height: `${(item.value / max) * 100}%`,
                 minHeight: item.value > 0 ? "20px" : 0,
                 backgroundColor: item.color ?? "#4f46e5",
               }}
             >
-              <span className="absolute inset-x-0 bottom-1 text-center text-sm font-medium text-white">
-                {item.value}
-              </span>
+              <span className="text-sm font-medium text-white">{item.value}</span>
             </div>
           </div>
           <span className="text-center text-xs text-slate-500" title={item.label}>
