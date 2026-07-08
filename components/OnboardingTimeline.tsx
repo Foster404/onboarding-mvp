@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toggleChecklistItem } from "@/app/actions/progress";
+import { downloadAsFile, isUploadedFileUrl } from "@/lib/media-download";
 import type { ChecklistItem, Stage, StageMedia } from "@/types/database";
 
 export type StageWithContent = Stage & {
@@ -37,14 +38,24 @@ function MediaEmbed({ media }: { media: StageMedia }) {
     );
   }
 
+  const isUploaded = isUploadedFileUrl(media.url);
+
   return (
     <a
       href={media.url}
       target="_blank"
       rel="noreferrer"
       className="inline-block rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+      {...(isUploaded
+        ? {
+            onClick: (e: React.MouseEvent) => {
+              e.preventDefault();
+              downloadAsFile(media.url, media.title);
+            },
+          }
+        : {})}
     >
-      Open presentation: {media.title}
+      {isUploaded ? "Download" : "Open"}: {media.title}
     </a>
   );
 }

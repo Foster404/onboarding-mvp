@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { downloadAsFile, isUploadedFileUrl } from "@/lib/media-download";
 import {
   addChecklistItem,
   addStageMedia,
@@ -26,12 +27,6 @@ function inferMediaType(url: string, mime?: string): MediaType {
   if (/youtube\.com|youtu\.be/i.test(url)) return "video";
   if (/\.(mp4|webm|mov|m4v|ogv)(\?|$)/i.test(url)) return "video";
   return "presentation";
-}
-
-// Uploaded files live in our own Supabase Storage bucket, so it's safe to
-// force a download for them; pasted links (e.g. YouTube) should just open.
-function isUploadedFileUrl(url: string) {
-  return url.includes("/storage/v1/object/public/media/");
 }
 
 // Supabase Storage rejects object keys with spaces or characters like
@@ -308,7 +303,14 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                     rel="noreferrer"
                     title={m.url}
                     className="truncate text-indigo-600 hover:underline"
-                    {...(isUploadedFileUrl(m.url) ? { download: true } : {})}
+                    {...(isUploadedFileUrl(m.url)
+                      ? {
+                          onClick: (e: React.MouseEvent) => {
+                            e.preventDefault();
+                            downloadAsFile(m.url, m.title);
+                          },
+                        }
+                      : {})}
                   >
                     {m.title}
                   </a>
