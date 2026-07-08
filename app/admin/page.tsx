@@ -63,10 +63,12 @@ export default async function AdminDashboardPage() {
 
   const allProfiles = profiles ?? [];
   const stageList = (stages ?? []) as StageWithItems[];
-  const admins = allProfiles.filter((p) => p.role === "admin");
-  const employees = allProfiles.filter((p) => p.role === "employee");
 
-  const employeeProgress = employees.map((employee) => {
+  // Every dashboard except Status breakdown excludes resigned employees and
+  // includes admins, so this is the shared base list for those widgets.
+  const nonResignedProfiles = allProfiles.filter((p) => p.status !== "resigned");
+
+  const employeeProgress = nonResignedProfiles.map((employee) => {
     const completedIds = progressByEmployee.get(employee.id) ?? new Set<string>();
     const stageProgress = computeStageProgress(stageList, completedIds);
     const current = currentStage(stageProgress);
@@ -77,24 +79,25 @@ export default async function AdminDashboardPage() {
   const finished = employeeProgress.filter((e) => e.percent === 100);
   const active = employeeProgress.filter((e) => e.percent < 100);
 
-  // Stat cards up top should reflect people actually on the roster, not
-  // employees who have since resigned.
-  const nonResignedProfiles = allProfiles.filter((p) => p.status !== "resigned");
-  const nonResignedProgress = employeeProgress.filter((e) => e.employee.status !== "resigned");
-  const activeNonResigned = nonResignedProgress.filter((e) => e.percent < 100);
-  const finishedNonResigned = nonResignedProgress.filter((e) => e.percent === 100);
+  // Company composition keeps admins as their own slice, so its "active" /
+  // "finished" segments are scoped to non-admin employees only (otherwise
+  // admins would be double-counted across slices).
+  const employeeOnlyProgress = employeeProgress.filter((e) => e.employee.role === "employee");
+  const activeEmployeesOnly = employeeOnlyProgress.filter((e) => e.percent < 100);
+  const finishedEmployeesOnly = employeeOnlyProgress.filter((e) => e.percent === 100);
+  const adminsNonResigned = employeeProgress.filter((e) => e.employee.role === "admin");
 
   const percentByEmployeeId = new Map(employeeProgress.map((e) => [e.employee.id, e.percent]));
 
-  const lastStarted = [...employees]
+  const lastStarted = [...nonResignedProfiles]
     .sort(
       (a, b) => new Date(b.onboarding_start_date).getTime() - new Date(a.onboarding_start_date).getTime()
     )
     .slice(0, 5);
 
-  // Stage funnel: how many still-active employees currently sit in each
-  // stage. Finished employees are excluded - the point of this chart is to
-  // show where people are stuck, not to re-state the Finished count.
+  // Stage funnel: how many still-active people currently sit in each stage.
+  // Finished people are excluded - the point of this chart is to show where
+  // people are stuck, not to re-state the Finished count.
   const stageFunnel = stageList.map((stage) => ({
     label: stage.title,
     value: active.filter((e) => e.currentStageTitle === stage.title).length,
@@ -172,8 +175,8 @@ export default async function AdminDashboardPage() {
     .sort((a, b) => b.daysOverdue - a.daysOverdue);
   const atRisk = atRiskAll.slice(0, 10);
 
-  // Upcoming birthdays across the whole company.
-  const upcomingBirthdays = allProfiles
+  // Upcoming birthdays across the whole company (resigned excluded, admins included).
+  const upcomingBirthdays = nonResignedProfiles
     .filter((p): p is typeof p & { birthdate: string } => !!p.birthdate)
     .map((p) => ({ profile: p, daysUntil: daysUntilNextBirthday(p.birthdate) }))
     .filter((p) => p.daysUntil <= BIRTHDAY_WINDOW_DAYS)
@@ -189,8 +192,8 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard label="Total employees" value={nonResignedProfiles.length} />
-        <StatCard label="Active onboarding" value={activeNonResigned.length} />
-        <StatCard label="Finished onboarding" value={finishedNonResigned.length} />
+        <StatCard label="Active onboarding" value={active.length} />
+        <StatCard label="Finished onboarding" value={finished.length} />
         <StatCard label="Overdue" value={atRiskAll.length} />
       </div>
 
@@ -198,9 +201,9 @@ export default async function AdminDashboardPage() {
         <Card title="Company composition">
           <PieChart
             segments={[
-              { label: "Active onboarding", value: active.length, color: "#a78bfa" },
-              { label: "Finished onboarding", value: finished.length, color: "#4f46e5" },
-              { label: "Admins", value: admins.length, color: "#cbd5e1" },
+              { label: "Active onboarding", value: activeEmployeesOnly.length, color: "#a78bfa" },
+              { label: "Finished onboarding", value: finishedEmployeesOnly.length, color: "#4f46e5" },
+              { label: "Admins", value: adminsNonResigned.length, color: "#cbd5e1" },
             ]}
           />
         </Card>
@@ -268,7 +271,12 @@ export default async function AdminDashboardPage() {
           <ul className="divide-y divide-slate-100">
             {upcomingBirthdays.map(({ profile, daysUntil: days }) => (
               <li key={profile.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="font-medium text-slate-900">{profile.full_name}</span>
+                <Link
+                  href={`/admin/employees/${profile.id}`}
+                  className="font-medium text-slate-900 hover:underline"
+                >
+                  {profile.full_name}
+                </Link>
                 <span className="text-slate-500">
                   {formatMonthDay(profile.birthdate!)}{" "}
                   <span className="text-slate-400">{days === 0 ? "· today" : `· in ${days}d`}</span>

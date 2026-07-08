@@ -172,7 +172,7 @@ export default function EmployeesTable({
   const [search, setSearch] = useState(initialQuery?.q ?? "");
   const [departmentFilter, setDepartmentFilter] = useState(initialQuery?.dept ?? "all");
   const [statusFilter, setStatusFilter] = useState<"all" | "not_resigned" | EmployeeStatus>(
-    (initialQuery?.status as EmployeeStatus | "not_resigned" | undefined) ?? "all"
+    (initialQuery?.status as EmployeeStatus | "not_resigned" | undefined) ?? "not_resigned"
   );
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>(
     (initialQuery?.role as UserRole | undefined) ?? "all"
@@ -206,7 +206,7 @@ export default function EmployeesTable({
     const params = new URLSearchParams();
     if (merged.search) params.set("q", merged.search);
     if (merged.departmentFilter !== "all") params.set("dept", merged.departmentFilter);
-    if (merged.statusFilter !== "all") params.set("status", merged.statusFilter);
+    if (merged.statusFilter !== "not_resigned") params.set("status", merged.statusFilter);
     if (merged.roleFilter !== "all") params.set("role", merged.roleFilter);
     if (merged.processFilter !== "all") params.set("process", merged.processFilter);
     if (merged.sortColumn !== "progress") params.set("sort", merged.sortColumn);
@@ -278,13 +278,13 @@ export default function EmployeesTable({
   function clearFilters() {
     setSearch("");
     setDepartmentFilter("all");
-    setStatusFilter("all");
+    setStatusFilter("not_resigned");
     setRoleFilter("all");
     setProcessFilter("all");
     syncUrl({
       search: "",
       departmentFilter: "all",
-      statusFilter: "all",
+      statusFilter: "not_resigned",
       roleFilter: "all",
       processFilter: "all",
     });

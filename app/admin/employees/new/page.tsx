@@ -72,16 +72,18 @@ export default function NewEmployeePage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg">
-      <div className="mb-1 flex items-start gap-2">
-        <BackButton />
-        <h1 className="text-xl font-semibold text-slate-900">New employee</h1>
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <div className="flex items-start gap-2">
+          <BackButton />
+          <h1 className="text-xl font-semibold text-slate-900">New employee</h1>
+        </div>
+        <p className="text-sm text-slate-500">
+          Creates their login with a temporary password generated for you to share
+        </p>
       </div>
-      <p className="mb-6 text-sm whitespace-nowrap text-slate-500">
-        Creates their login with a temporary password generated for you to share
-      </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="mx-auto flex max-w-lg flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-slate-700">
             Full name<span className="text-red-500">*</span>
