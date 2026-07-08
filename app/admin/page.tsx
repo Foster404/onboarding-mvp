@@ -79,14 +79,6 @@ export default async function AdminDashboardPage() {
   const finished = employeeProgress.filter((e) => e.percent === 100);
   const active = employeeProgress.filter((e) => e.percent < 100);
 
-  // Company composition keeps admins as their own slice, so its "active" /
-  // "finished" segments are scoped to non-admin employees only (otherwise
-  // admins would be double-counted across slices).
-  const employeeOnlyProgress = employeeProgress.filter((e) => e.employee.role === "employee");
-  const activeEmployeesOnly = employeeOnlyProgress.filter((e) => e.percent < 100);
-  const finishedEmployeesOnly = employeeOnlyProgress.filter((e) => e.percent === 100);
-  const adminsNonResigned = employeeProgress.filter((e) => e.employee.role === "admin");
-
   const percentByEmployeeId = new Map(employeeProgress.map((e) => [e.employee.id, e.percent]));
 
   const lastStarted = [...nonResignedProfiles]
@@ -198,12 +190,11 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card title="Company composition">
+        <Card title="Onboarding composition">
           <PieChart
             segments={[
-              { label: "Active onboarding", value: activeEmployeesOnly.length, color: "#a78bfa" },
-              { label: "Finished onboarding", value: finishedEmployeesOnly.length, color: "#4f46e5" },
-              { label: "Admins", value: adminsNonResigned.length, color: "#cbd5e1" },
+              { label: "Active onboarding", value: active.length, color: "#a78bfa" },
+              { label: "Finished onboarding", value: finished.length, color: "#4f46e5" },
             ]}
           />
         </Card>

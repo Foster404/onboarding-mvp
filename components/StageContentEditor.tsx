@@ -16,15 +16,38 @@ import Spinner from "@/components/Spinner";
 
 export type StageWithContent = Stage & { checklist_items: ChecklistItem[]; stage_media: StageMedia[] };
 
+// The admin only ever picks "Link" or "File" - whether it plays back as a
+// video or opens as a plain link is inferred from the URL / uploaded file's
+// mime type, rather than asking the admin to classify it themselves.
+function inferMediaType(url: string, mime?: string): MediaType {
+  if (mime) return mime.startsWith("video/") ? "video" : "presentation";
+  if (/youtube\.com|youtu\.be/i.test(url)) return "video";
+  if (/\.(mp4|webm|mov|m4v|ogv)(\?|$)/i.test(url)) return "video";
+  return "presentation";
+}
+
+// Uploaded files live in our own Supabase Storage bucket, so it's safe to
+// force a download for them; pasted links (e.g. YouTube) should just open.
+function isUploadedFileUrl(url: string) {
+  return url.includes("/storage/v1/object/public/media/");
+}
+
 export default function StageContentEditor({ stage }: { stage: StageWithContent }) {
   const router = useRouter();
   const [title, setTitle] = useState(stage.title);
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newMediaTitle, setNewMediaTitle] = useState("");
-  const [newMediaType, setNewMediaType] = useState<MediaType>("video");
+  const [sourceMode, setSourceMode] = useState<"link" | "file">("link");
   const [newMediaUrl, setNewMediaUrl] = useState("");
+  const [uploadedMime, setUploadedMime] = useState<string | undefined>(undefined);
   const [uploading, setUploading] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  function selectSourceMode(mode: "link" | "file") {
+    setSourceMode(mode);
+    setNewMediaUrl("");
+    setUploadedMime(undefined);
+  }
 
   async function run(key: string, fn: () => Promise<void>) {
     setBusyKey(key);
@@ -53,6 +76,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
 
     const { data } = supabase.storage.from("media").getPublicUrl(path);
     setNewMediaUrl(data.publicUrl);
+    setUploadedMime(file.type);
     if (!newMediaTitle) setNewMediaTitle(file.name);
   }
 
@@ -112,19 +136,29 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
         <h4 className="mb-2 text-sm font-medium text-slate-700">Videos &amp; presentations</h4>
         <ul className="mb-3 flex flex-col gap-2">
           {stage.stage_media.map((m) => (
-            <li key={m.id} className="flex items-center justify-between text-sm">
-              <span className="truncate text-slate-700">
-                [{m.type}] {m.title}
-              </span>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => run(`remove-media-${m.id}`, () => deleteStageMedia(m.id))}
-                className="flex items-center gap-1.5 text-red-600 hover:underline disabled:opacity-50"
+            <li key={m.id} className="flex items-center justify-between gap-2 text-sm">
+              <a
+                href={m.url}
+                target="_blank"
+                rel="noreferrer"
+                title={m.url}
+                className="truncate text-indigo-600 hover:underline"
+                {...(isUploadedFileUrl(m.url) ? { download: true } : {})}
               >
-                {busyKey === `remove-media-${m.id}` && <Spinner className="h-3.5 w-3.5" />}
-                Remove
-              </button>
+                {m.title}
+              </a>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-xs text-slate-400">{m.type === "video" ? "Video" : "File"}</span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => run(`remove-media-${m.id}`, () => deleteStageMedia(m.id))}
+                  className="flex items-center gap-1.5 text-red-600 hover:underline disabled:opacity-50"
+                >
+                  {busyKey === `remove-media-${m.id}` && <Spinner className="h-3.5 w-3.5" />}
+                  Remove
+                </button>
+              </div>
             </li>
           ))}
           {stage.stage_media.length === 0 && (
@@ -133,45 +167,70 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
         </ul>
 
         <div className="flex flex-col gap-2 rounded-md bg-slate-50 p-3">
-          <div className="flex gap-2">
-            <select
-              value={newMediaType}
-              onChange={(e) => setNewMediaType(e.target.value as MediaType)}
-              className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-            >
-              <option value="video">Video</option>
-              <option value="presentation">Presentation</option>
-            </select>
-            <input
-              value={newMediaTitle}
-              onChange={(e) => setNewMediaTitle(e.target.value)}
-              placeholder="Title"
-              className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-            />
-          </div>
           <input
-            value={newMediaUrl}
-            onChange={(e) => setNewMediaUrl(e.target.value)}
-            placeholder="URL (YouTube link, or upload a file below)"
+            value={newMediaTitle}
+            onChange={(e) => setNewMediaTitle(e.target.value)}
+            placeholder="Title*"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
           />
-          <div className="flex items-center justify-between gap-2">
-            <label className="text-xs text-slate-500">
+
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => selectSourceMode("link")}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                sourceMode === "link"
+                  ? "bg-indigo-600 text-white"
+                  : "border border-slate-300 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              Link
+            </button>
+            <button
+              type="button"
+              onClick={() => selectSourceMode("file")}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                sourceMode === "file"
+                  ? "bg-indigo-600 text-white"
+                  : "border border-slate-300 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              File
+            </button>
+          </div>
+
+          {sourceMode === "link" ? (
+            <input
+              value={newMediaUrl}
+              onChange={(e) => setNewMediaUrl(e.target.value)}
+              placeholder="e.g. https://youtube.com/watch?v=... or another link"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+            />
+          ) : (
+            <div className="flex items-center gap-2">
               <input type="file" onChange={handleUploadFile} disabled={uploading} className="text-xs" />
               {uploading && (
-                <span className="ml-1.5 inline-flex items-center gap-1 align-middle">
+                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
                   <Spinner className="h-3 w-3" /> uploading...
                 </span>
               )}
-            </label>
+              {!uploading && newMediaUrl && (
+                <span className="text-xs text-emerald-600">Uploaded ✓</span>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end">
             <button
               type="button"
               disabled={busy || !newMediaTitle.trim() || !newMediaUrl.trim()}
               onClick={() =>
                 run("add-media", async () => {
-                  await addStageMedia(stage.id, newMediaType, newMediaTitle.trim(), newMediaUrl.trim());
+                  const type = inferMediaType(newMediaUrl.trim(), uploadedMime);
+                  await addStageMedia(stage.id, type, newMediaTitle.trim(), newMediaUrl.trim());
                   setNewMediaTitle("");
                   setNewMediaUrl("");
+                  setUploadedMime(undefined);
                 })
               }
               className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
