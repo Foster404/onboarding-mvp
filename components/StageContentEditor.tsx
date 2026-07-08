@@ -286,7 +286,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                 >
                   ⠿
                 </span>
-                <span className="shrink-0 text-xs text-slate-400">
+                <span className="w-10 shrink-0 text-xs text-slate-400">
                   {isUploadedFileUrl(m.url) ? (m.type === "video" ? "Video" : "File") : "Link"}
                 </span>
                 {renamingId === m.id ? (
