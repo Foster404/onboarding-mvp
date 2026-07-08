@@ -143,7 +143,7 @@ export default function EmployeeEditForm({ profile }: { profile: Profile }) {
             onChange={(e) => setVacationDays(Number(e.target.value))}
             className={FIELD_CLASS}
           />
-          <span className="text-xs text-slate-400">Manual for MVP; future 1C sync target.</span>
+          <span className="text-xs text-slate-400">Manual for MVP; future 1C sync target</span>
         </div>
       </div>
 

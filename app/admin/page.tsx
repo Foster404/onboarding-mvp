@@ -135,7 +135,7 @@ export default async function AdminDashboardPage() {
     .map(([label, { activeCount, activePercentSum }]) => ({
       label,
       value: activeCount,
-      sublabel: `· ${Math.round(activePercentSum / activeCount)}% avg`,
+      sublabel: `${Math.round(activePercentSum / activeCount)}% avg`,
       color: "#a78bfa",
     }))
     .sort((a, b) => b.value - a.value);
