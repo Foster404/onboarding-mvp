@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -40,13 +40,25 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
   const [sourceMode, setSourceMode] = useState<"link" | "file">("link");
   const [newMediaUrl, setNewMediaUrl] = useState("");
   const [uploadedMime, setUploadedMime] = useState<string | undefined>(undefined);
+  const [chosenFileName, setChosenFileName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function selectSourceMode(mode: "link" | "file") {
     setSourceMode(mode);
     setNewMediaUrl("");
     setUploadedMime(undefined);
+    setChosenFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function resetMediaForm() {
+    setNewMediaTitle("");
+    setNewMediaUrl("");
+    setUploadedMime(undefined);
+    setChosenFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function run(key: string, fn: () => Promise<void>) {
@@ -63,6 +75,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setChosenFileName(file.name);
     setUploading(true);
     const supabase = createClient();
     const path = `${stage.id}/${Date.now()}-${file.name}`;
@@ -133,7 +146,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
       </div>
 
       <div className="border-t border-slate-100 pt-4">
-        <h4 className="mb-2 text-sm font-medium text-slate-700">Videos &amp; presentations</h4>
+        <h4 className="mb-2 text-sm font-medium text-slate-700">Videos &amp; files</h4>
         <ul className="mb-3 flex flex-col gap-2">
           {stage.stage_media.map((m) => (
             <li key={m.id} className="flex items-center justify-between gap-2 text-sm">
@@ -148,7 +161,9 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                 {m.title}
               </a>
               <div className="flex shrink-0 items-center gap-3">
-                <span className="text-xs text-slate-400">{m.type === "video" ? "Video" : "File"}</span>
+                <span className="text-xs text-slate-400">
+                  {isUploadedFileUrl(m.url) ? (m.type === "video" ? "Video" : "File") : "Link"}
+                </span>
                 <button
                   type="button"
                   disabled={busy}
@@ -208,14 +223,28 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
             />
           ) : (
             <div className="flex items-center gap-2">
-              <input type="file" onChange={handleUploadFile} disabled={uploading} className="text-xs" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleUploadFile}
+                disabled={uploading}
+                className="hidden"
+              />
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
+              >
+                Choose file
+              </button>
               {uploading && (
                 <span className="inline-flex items-center gap-1 text-xs text-slate-500">
                   <Spinner className="h-3 w-3" /> uploading...
                 </span>
               )}
-              {!uploading && newMediaUrl && (
-                <span className="text-xs text-emerald-600">Uploaded ✓</span>
+              {!uploading && chosenFileName && (
+                <span className="truncate text-xs text-slate-500">{chosenFileName}</span>
               )}
             </div>
           )}
@@ -228,9 +257,7 @@ export default function StageContentEditor({ stage }: { stage: StageWithContent 
                 run("add-media", async () => {
                   const type = inferMediaType(newMediaUrl.trim(), uploadedMime);
                   await addStageMedia(stage.id, type, newMediaTitle.trim(), newMediaUrl.trim());
-                  setNewMediaTitle("");
-                  setNewMediaUrl("");
-                  setUploadedMime(undefined);
+                  resetMediaForm();
                 })
               }
               className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
